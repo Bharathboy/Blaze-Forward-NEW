@@ -1,6 +1,10 @@
 
 
-from os import environ 
+from os import environ
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 class Config:
     
@@ -9,7 +13,7 @@ class Config:
     API_HASH = environ.get("API_HASH", "")
     BOT_TOKEN = environ.get("BOT_TOKEN", "") 
     BOT_SESSION = environ.get("BOT_SESSION", "Auto_Forward")
-    DATABASE_URI = environ.get("DATABASE", "")
+    DATABASE_URI = environ.get("DATABASE_URI", "")
     DATABASE_NAME = environ.get("DATABASE_NAME", "")
 
 

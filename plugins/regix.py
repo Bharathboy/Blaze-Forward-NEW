@@ -37,7 +37,14 @@ TEXT = Script.TEXT
 async def pub_(bot, message):
     user = message.from_user.id
     temp.CANCEL[user] = False
-    frwd_id = message.data.split("_")[2]
+    
+    try:
+        _, _, frwd_id, bot_type = message.data.split("_")
+    except ValueError:
+        # Fallback for old format
+        _, _, frwd_id = message.data.split("_")
+        bot_type = 'bot'  # Default to 'bot' if not specified
+
     if temp.lock.get(user) and str(temp.lock.get(user))=="True":
       return await message.answer("please wait until previous task complete", show_alert=True)
     sts = STS(frwd_id)
@@ -48,7 +55,7 @@ async def pub_(bot, message):
     if i.TO in temp.IS_FRWD_CHAT:
       return await message.answer("In Target chat a task is progressing. please wait until task complete", show_alert=True)
     m = await msg_edit(message.message, "<code>verifying your data's, please wait.</code>")
-    _bot, caption, forward_tag, datas, protect, button = await sts.get_data(user)
+    _bot, caption, forward_tag, datas, protect, button = await sts.get_data(user, bot_type)
     filter = datas['filters']
     max_size = datas['max_size']
     min_size = datas['min_size']
@@ -56,6 +63,11 @@ async def pub_(bot, message):
     exten = datas['extensions']
     keywords = ""
     extensions = ""
+    if _bot['username']:
+        mention = f"[{_bot['name']}](t.me/{_bot['username']})"
+    else:
+        mention = _bot['name']
+        
     if keyword:
         for key in keyword:
             keywords += f"{key}|"
@@ -84,13 +96,13 @@ async def pub_(bot, message):
     try: 
        await client.get_messages(sts.get("FROM"), sts.get("limit"))
     except:
-       await msg_edit(m, f"**Source chat may be a private channel / group. Use userbot (user must be member over there) or  if Make Your [Bot](t.me/{_bot['username']}) an admin over there**", retry_btn(frwd_id), True)
+       await msg_edit(m, f"**Source chat may be a private channel / group. Use userbot (user must be member over there) or if Make Your {mention} an admin over there**", retry_btn(frwd_id), True)
        return await stop(client, user)
     try:
        k = await client.send_message(i.TO, "Testing")
        await k.delete()
     except:
-       await msg_edit(m, f"**Please Make Your [UserBot / Bot](t.me/{_bot['username']}) Admin In Target Channel With Full Permissions**", retry_btn(frwd_id), True)
+       await msg_edit(m, f"**Please Make Your {mention} Admin In Target Channel With Full Permissions**", retry_btn(frwd_id), True)
        return await stop(client, user)
     user_have_db = False
     dburi = datas['db_uri']
@@ -534,8 +546,8 @@ async def restart_pending_forwads(bot, user):
        sts.add('deleted', value=settings['deleted'])
        sts.add('total_files', value=settings['total'])
        m = await bot.get_messages(user, settings['msg_id'])#
-       _bot, caption, forward_tag, datas, protect, button = await sts.get_data(user)
        i = sts.get(full=True)
+       _bot, caption, forward_tag, datas, protect, button = await sts.get_data(user,i.bot_type)
        filter = datas['filters']
        max_size = datas['max_size']
        min_size = datas['min_size']
@@ -543,6 +555,10 @@ async def restart_pending_forwads(bot, user):
        exten = datas['extensions']
        keywords = ""
        extensions = ""
+       if _bot['username']:
+          mention = f"[{_bot['name']}](t.me/{_bot['username']})"
+       else:
+          mention = _bot['name']
        if keyword:
            for key in keyword:
                keywords += f"{key}|"
@@ -574,13 +590,13 @@ async def restart_pending_forwads(bot, user):
        try: 
           await client.get_messages(sts.get("FROM"), sts.get("limit"))
        except:
-          await msg_edit(m, f"**Source chat may be a private channel / group. Use userbot (user must be member over there) or  if Make Your [Bot](t.me/{_bot['username']}) an admin over there**", retry_btn(forward_id), True)
+          await msg_edit(m, f"**Source chat may be a private channel / group. Use userbot (user must be member over there) or if Make Your {mention} an admin over there**", retry_btn(forward_id), True)
           return await stop(client, user)
        try:
           k = await client.send_message(i.TO, "Testing")
           await k.delete()
        except:
-          await msg_edit(m, f"**Please Make Your [UserBot / Bot](t.me/{_bot['username']}) Admin In Target Channel With Full Permissions**", retry_btn(forward_id), True)
+          await msg_edit(m, f"**Please Make Your {mention} Admin In Target Channel With Full Permissions**", retry_btn(forward_id), True)
           return await stop(client, user)
     except:
        return await db.rmve_frwd(user)
