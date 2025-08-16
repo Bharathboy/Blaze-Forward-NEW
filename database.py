@@ -200,7 +200,8 @@ class Db:
             'total': 0,
             'duplicate': 0,
             'skip': 0,
-            'filtered' :0
+            'filtered' :0,
+            'client_type': None
         }
         user = await self.nfy.find_one({'user_id': int(user_id)})
         if user:

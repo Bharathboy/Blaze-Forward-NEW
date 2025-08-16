@@ -25,7 +25,7 @@ from pyrogram.types import Message
 # Ask Doubt on telegram @KingVJ01
 
 CLIENT = CLIENT()
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 TEXT = Script.TEXT
 
@@ -278,7 +278,8 @@ async def edit(user, msg, title, status, sts):
         i = sts.get(full=True)
         status = 'Forwarding' if status == 5 else f"sleeping {status} s" if str(status).isnumeric() else status
         percentage = "{:.0f}".format(float(i.fetched)*100/float(i.total))
-        await update_forward(user_id=user, last_id=None, start_time=i.start, limit=i.limit, chat_id=i.FROM, toid=i.TO, forward_id=None, msg_id=msg.id, fetched=i.fetched, deleted=i.deleted, total=i.total_files, duplicate=i.duplicate, skip=i.skip, filterd=i.filtered)
+        client_type = sts.get('client_type')
+        await update_forward(user_id=user, last_id=None, start_time=i.start, limit=i.limit, chat_id=i.FROM, toid=i.TO, forward_id=None, msg_id=msg.id, fetched=i.fetched, deleted=i.deleted, total=i.total_files, duplicate=i.duplicate, skip=i.skip, filterd=i.filtered, client_type=client_type)
         now = time.time()
         diff = int(now - i.start) if i.start>0 else 0
         speed = sts.divide(i.fetched, diff)
@@ -295,7 +296,8 @@ async def edit(user, msg, title, status, sts):
         time_to_comple = time_to_comple if (time_to_comple != '' and status not in ["ᴄᴀɴᴄᴇʟʟᴇᴅ", "ᴄᴏᴍᴘʟᴇᴛᴇᴅ"]) else '0 s'
         progress, percentage = progress_bar_tuple(percentage)
         bar=f"{progress} ​• {percentage}%"
-        button =  [[InlineKeyboardButton(bar, f'fwrdstatus#{status}#{estimated_total_time}#{percentage}#{i.id}')]]
+        button =  [[InlineKeyboardButton(bar, f'fwrdstatus#{status}#{percentage}#{i.id}')]]
+        # button =  [[InlineKeyboardButton(bar, f'fwrdstatus#{status}#{estimated_total_time}#{percentage}#{i.id}')]]
         text = TEXT.format(i.total, i.fetched, i.total_files, remaining, i.duplicate,
                             i.deleted, i.skip, i.filtered, status, time_to_comple, title)
         if status in ["ᴄᴀɴᴄᴇʟʟᴇᴅ", "ᴄᴏᴍᴘʟᴇᴛᴇᴅ"]:
@@ -331,7 +333,7 @@ async def stop(client, user):
      pass 
    await db.rmve_frwd(user)
    temp.forwardings -= 1
-   temp.lock[user] = False 
+   temp.lock[user] = False
 
 # Don't Remove Credit Tg - @VJ_Botz
 # Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
@@ -341,7 +343,7 @@ async def send(bot, user, text):
    try:
       await bot.send_message(user, text=text)
    except:
-      pass 
+      pass
 
 # Don't Remove Credit Tg - @VJ_Botz
 # Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
@@ -467,7 +469,7 @@ async def terminate_frwding(bot, m):
 
 @Client.on_callback_query(filters.regex(r'^fwrdstatus'))
 async def status_msg(bot, msg):
-    _, status, est_time, percentage, frwd_id = msg.data.split("#")
+    _, status, percentage, frwd_id = msg.data.split("#")
     sts = STS(frwd_id)
     if not sts.verify():
        fetched, forwarded, remaining = 0
@@ -700,9 +702,10 @@ async def restart_pending_forwads(bot, user):
 async def store_vars(user_id):
     settings = await db.get_forward_details(user_id)
     fetch = settings['fetched']
+    client_type = settings['client_type']
     forward_id = f'{user_id}-{fetch}'
     print(fetch)
-    STS(id=forward_id).store(settings['chat_id'], settings['toid'], settings['skip'], settings['limit'])
+    STS(id=forward_id).store(settings['chat_id'], settings['toid'], settings['skip'], settings['limit'], client_type)
     return forward_id
 
 # Don't Remove Credit Tg - @VJ_Botz
@@ -725,7 +728,7 @@ async def restart_forwards(client):
 # Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
 # Ask Doubt on telegram @KingVJ01
 
-async def update_forward(user_id, chat_id, start_time, toid, last_id, limit, forward_id, msg_id, fetched, total, duplicate, deleted, skip, filterd):
+async def update_forward(user_id, chat_id, start_time, toid, last_id, limit, forward_id, msg_id, fetched, total, duplicate, deleted, skip, filterd, client_type):
     details = {
         'chat_id': chat_id,
         'toid': toid,
@@ -740,7 +743,8 @@ async def update_forward(user_id, chat_id, start_time, toid, last_id, limit, for
         'total': total,
         'duplicate': duplicate,
         'skip': skip,
-        'filtered':filterd
+        'filtered':filterd,
+        'client_type': client_type
     }
     await db.update_forward(user_id, details)
 

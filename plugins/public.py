@@ -23,15 +23,19 @@ async def run(bot, message):
     userbot_account = await db.get_userbot(user_id)
     _bot = None
 
-    # Case 1: No accounts are configured at all.
+    # Case 1: No accounts are configured at all.'
+    client_type_to_store = None
     if not bot_account and not userbot_account:
         return await message.reply("<code>You didn't add any bot. Please add a bot using /settings !</code>")
     
     # Case 2: Only one account exists, so select it automatically.
+    
     elif bot_account and not userbot_account:
         _bot = bot_account
+        client_type_to_store = 'bot'
     elif not bot_account and userbot_account:
         _bot = userbot_account
+        client_type_to_store = 'userbot'
     
     # Case 3: Both accounts exist, so we must ask the user to choose.
     else:
@@ -57,8 +61,10 @@ async def run(bot, message):
             # Assign the chosen account to the `_bot` variable based on the reply
             if "🤖 Bot" in choice_msg.text:
                 _bot = bot_account
+                client_type_to_store = 'bot'
             elif "👤 Userbot" in choice_msg.text:
                 _bot = userbot_account
+                client_type_to_store = 'userbot'
             else:
                 return await message.reply("Invalid choice. Operation cancelled.", reply_markup=ReplyKeyboardRemove())
         except Exception as e:
@@ -140,4 +146,4 @@ async def run(bot, message):
         disable_web_page_preview=True,
         reply_markup=reply_markup
     )
-    STS(forward_id).store(chat_id, toid, int(skipno.text), int(last_msg_id))
+    STS(forward_id).store(chat_id, toid, int(skipno.text), int(last_msg_id), client_type_to_store)
