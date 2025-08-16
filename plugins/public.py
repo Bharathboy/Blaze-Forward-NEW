@@ -1,4 +1,7 @@
-# bharathboy/vj-forward-bot-new/VJ-Forward-Bot-NEW-084baf10231546bbbfc6225b6b9f609be14a7d31/plugins/public.py
+# Don't Remove Credit Tg - @VJ_Botz
+# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
+# Ask Doubt on telegram @KingVJ01
+
 import re
 import asyncio 
 from .utils import STS
@@ -15,21 +18,22 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQ
 async def run(bot, message):
     user_id = message.from_user.id
     
+    # --- MODIFIED LOGIC TO CHOOSE CLIENT ---
     bot_account = await db.get_bot(user_id)
     userbot_account = await db.get_userbot(user_id)
     _bot = None
-    bot_type = None
 
+    # Case 1: No accounts are configured at all.
     if not bot_account and not userbot_account:
         return await message.reply("<code>You didn't add any bot. Please add a bot using /settings !</code>")
     
+    # Case 2: Only one account exists, so select it automatically.
     elif bot_account and not userbot_account:
         _bot = bot_account
-        bot_type = 'bot'
     elif not bot_account and userbot_account:
         _bot = userbot_account
-        bot_type = 'userbot'
     
+    # Case 3: Both accounts exist, so we must ask the user to choose.
     else:
         try:
             buttons = [
@@ -53,14 +57,18 @@ async def run(bot, message):
             # Assign the chosen account to the `_bot` variable based on the reply
             if "🤖 Bot" in choice_msg.text:
                 _bot = bot_account
-                bot_type = 'bot'
             elif "👤 Userbot" in choice_msg.text:
                 _bot = userbot_account
-                bot_type = 'userbot'
             else:
                 return await message.reply("Invalid choice. Operation cancelled.", reply_markup=ReplyKeyboardRemove())
         except Exception as e:
+            # Catches errors like conversation timeouts
             return await message.reply(f"An error occurred: {e}. Operation cancelled.", reply_markup=ReplyKeyboardRemove())
+    
+    # --- END OF MODIFIED LOGIC ---
+
+    # The rest of your original code continues from here.
+    # The `_bot` variable is now correctly set based on the user's choice or the available account.
     
     buttons = []
     btn_data = {}
@@ -123,7 +131,7 @@ async def run(bot, message):
     
     forward_id = f"{user_id}-{skipno.id}"
     buttons = [[
-        InlineKeyboardButton('Yes', callback_data=f"start_public_{forward_id}_{bot_type}"),
+        InlineKeyboardButton('Yes', callback_data=f"start_public_{forward_id}"),
         InlineKeyboardButton('No', callback_data="close_btn")
     ]]
     reply_markup = InlineKeyboardMarkup(buttons)
@@ -132,4 +140,4 @@ async def run(bot, message):
         disable_web_page_preview=True,
         reply_markup=reply_markup
     )
-    STS(forward_id).store(chat_id, toid, int(skipno.text), int(last_msg_id), bot_type)
+    STS(forward_id).store(chat_id, toid, int(skipno.text), int(last_msg_id))
