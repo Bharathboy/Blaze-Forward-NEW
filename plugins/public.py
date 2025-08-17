@@ -150,11 +150,11 @@ async def forward_command(bot: Client, message):
     for _bot in bots:
         if _bot['id'] not in temp.lock.get(user_id, []):
             buttons.append([InlineKeyboardButton(
-                f"Bot: {_bot.get('name', 'N/A')}", callback_data=f"fwd:client:bot:{_bot['id']}")])
+                f"🤖BOT: {_bot.get('name', 'N/A')}", callback_data=f"fwd:client:bot:{_bot['id']}")])
     for usr_bot in userbots:
         if usr_bot['id'] not in temp.lock.get(user_id, []):
             buttons.append([InlineKeyboardButton(
-                f"Userbot: {usr_bot.get('name', 'N/A')}", callback_data=f"fwd:client:userbot:{usr_bot['id']}")])
+                f"👤USERBOT: {usr_bot.get('name', 'N/A')}", callback_data=f"fwd:client:userbot:{usr_bot['id']}")])
     
     if not buttons:
         return await message.reply_text("All your bots are currently busy. Please wait for a job to complete.")

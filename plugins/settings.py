@@ -34,10 +34,10 @@ async def settings_query(bot, query):
      userbots = await db.get_userbots(user_id)
      
      for _bot in bots:
-        buttons.append([InlineKeyboardButton(_bot['name'],
+        buttons.append([InlineKeyboardButton(f"🤖BOT: {_bot['name']}",
                          callback_data=f"settings#editbot_{_bot['id']}")])
      for usr_bot in userbots:
-        buttons.append([InlineKeyboardButton(usr_bot['name'],
+        buttons.append([InlineKeyboardButton(f"👤USERBOT: {usr_bot['name']}",
                          callback_data=f"settings#edituserbot_{usr_bot['id']}")])
 
      buttons.append([InlineKeyboardButton('✚ Add bot ✚', 

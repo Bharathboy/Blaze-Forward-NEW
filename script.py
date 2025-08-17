@@ -8,43 +8,43 @@ class Script(object):
 ɪ ᴄᴀɴ ꜰᴏʀᴡᴀʀᴅ ᴀʟʟ ᴍᴇssᴀɢᴇ ꜰʀᴏᴍ ᴏɴᴇ ᴄʜᴀɴɴᴇʟ ᴛᴏ ᴀɴᴏᴛʜᴇʀ ᴄʜᴀɴɴᴇʟ</b>
 
 **ᴄʟɪᴄᴋ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ᴛᴏ ᴋɴᴏᴡ ᴍᴏʀᴇ ᴀʙᴏᴜᴛ ᴍᴇ**"""
-  HELP_TXT = """<b><u>🔆 Help</b></u>
+  HELP_TXT = """<b><u>🔆 ʜᴇʟᴘ</b></u>
 
-<u>**📚 Available commands:**</u>
-<b>⏣ __/start - check I'm alive__ 
-⏣ __/forward - forward messages__
-⏣ __/settings - configure your settings__
-⏣ __ /unequify - delete duplicate media messages in chats__
-⏣ __ /stop - stop your ongoing tasks__
-⏣ __ /reset - reset your settings__</b>
+<u>**📚 ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs:**</u>
+<b>⏣ __ /start - ᴄʜᴇᴄᴋ ɪ'ᴍ ᴀʟɪᴠᴇ__ 
+⏣ __ /forward - ꜰᴏʀᴡᴀʀᴅ ᴍᴇssᴀɢᴇs__
+⏣ __ /settings - ᴄᴏɴꜰɪɢᴜʀᴇ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs__
+⏣ __ /unequify - ᴅᴇʟᴇᴛᴇ ᴅᴜᴘʟɪᴄᴀᴛᴇ ᴍᴇᴅɪᴀ ᴍᴇssᴀɢᴇs ɪɴ ᴄʜᴀᴛs__
+⏣ __ /stop - sᴛᴏᴘ ʏᴏᴜʀ ᴏɴɢᴏɪɴɢ ᴛᴀsᴋs__
+⏣ __ /reset - ʀᴇsᴇᴛ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs__</b>
 
-<b><u>💢 Features:</b></u>
-<b>► __Forward message from public channel to your channel without admin permission. if the channel is private need admin permission, if you can't give admin permission then use userbot, but in userbot there is a chance to get your account ban so use fake account__
-► __custom caption__
-► __custom button__
-► __skip duplicate messages__
-► __filter type of messages__</b>
+<b><u>💢 ꜰᴇᴀᴛᴜʀᴇs:</b></u>
+<b>► __ꜰᴏʀᴡᴀʀᴅ ᴍᴇssᴀɢᴇ ꜰʀᴏᴍ ᴘᴜʙʟɪᴄ ᴄʜᴀɴɴᴇʟ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴡɪᴛʜᴏᴜᴛ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ. ɪꜰ ᴛʜᴇ ᴄʜᴀɴɴᴇʟ ɪs ᴘʀɪᴠᴀᴛᴇ ɴᴇᴇᴅ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ, ɪꜰ ʏᴏᴜ ᴄᴀɴ'ᴛ ɢɪᴠᴇ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ ᴛʜᴇɴ ᴜsᴇ ᴜsᴇʀʙᴏᴛ, ʙᴜᴛ ɪɴ ᴜsᴇʀʙᴏᴛ ᴛʜᴇʀᴇ ɪs ᴀ ᴄʜᴀɴᴄᴇ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ ʙᴀɴ sᴏ ᴜsᴇ ꜰᴀᴋᴇ ᴀᴄᴄᴏᴜɴᴛ__
+► __ᴄᴜsᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ__
+► __ᴄᴜsᴛᴏᴍ ʙᴜᴛᴛᴏɴ__
+► __sᴋɪᴘ ᴅᴜᴘʟɪᴄᴀᴛᴇ ᴍᴇssᴀɢᴇs__
+► __ꜰɪʟᴛᴇʀ ᴛʏᴘᴇ ᴏꜰ ᴍᴇssᴀɢᴇs__</b>
 """
   
-  HOW_USE_TXT = """<b><u>⚠️ Before Forwarding:</b></u>
-<b>► __add a bot or userbot__
-► __add atleast one to channel__ `(your bot/userbot must be admin in there)`
-► __You can add chats or bots by using /settings__
-► __if the **From Channel** is private your userbot must be member in there or your bot must need admin permission in there also__
-► __Then use /forward to forward messages__
+  HOW_USE_TXT = """<b><u>⚠️ ʙᴇꜰᴏʀᴇ ꜰᴏʀᴡᴀʀᴅɪɴɢ:</b></u>
+<b>► __ᴀᴅᴅ ᴀ ʙᴏᴛ ᴏʀ ᴜsᴇʀʙᴏᴛ__
+► __ᴀᴅᴅ ᴀᴛʟᴇᴀsᴛ ᴏɴᴇ ᴛᴏ ᴄʜᴀɴɴᴇʟ__ `(ʏᴏᴜʀ ʙᴏᴛ/ᴜsᴇʀʙᴏᴛ ᴍᴜsᴛ ʙᴇ ᴀᴅᴍɪɴ ɪɴ ᴛʜᴇʀᴇ)`
+► __ʏᴏᴜ ᴄᴀɴ ᴀᴅᴅ ᴄʜᴀᴛs ᴏʀ ʙᴏᴛs ʙʏ ᴜsɪɴɢ /sᴇᴛᴛɪɴɢs__
+► __ɪꜰ ᴛʜᴇ **ꜰʀᴏᴍ ᴄʜᴀɴɴᴇʟ** ɪs ᴘʀɪᴠᴀᴛᴇ ʏᴏᴜʀ ᴜsᴇʀʙᴏᴛ ᴍᴜsᴛ ʙᴇ ᴍᴇᴍʙᴇʀ ɪɴ ᴛʜᴇʀᴇ ᴏʀ ʏᴏᴜʀ ʙᴏᴛ ᴍᴜsᴛ ɴᴇᴇᴅ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ ɪɴ ᴛʜᴇʀᴇ ᴀʟsᴏ__
+► __ᴛʜᴇɴ ᴜsᴇ /ꜰᴏʀᴡᴀʀᴅ ᴛᴏ ꜰᴏʀᴡᴀʀᴅ ᴍᴇssᴀɢᴇs__
 
-► ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ [ᴛᴜᴛᴏʀɪᴀल ᴠɪᴅᴇᴏ](https://youtu.be/wO1FE-lf35I)</b>"""
+► ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ [ᴛᴜᴛᴏʀɪᴀʟ ᴠɪᴅᴇᴏ](https://youtu.be/wO1FE-lf35I)</b>"""
   
   ABOUT_TXT = """<b>
-╔════❰ ғᴏʀᴡᴀʀᴅ ʙᴏᴛ ❱═❍⊱❁۪۪
+╔════❰ ꜰᴏʀᴡᴀʀᴅ ʙᴏᴛ ❱═❍⊱❁۪۪
 ║╭━━━━━━━━━━━━━━━➣
-║┣⪼📃ʙᴏᴛ : [Fᴏʀᴡᴀᴅ Bᴏᴛ](https://t.me/VJForwardBot)
-║┣⪼👦Cʀᴇᴀᴛᴏʀ : [Kɪɴɢ VJ 👑](https://t.me/kingvj01)
-║┣⪼🤖Uᴘᴅᴀᴛᴇ : [VJ Bᴏᴛᴢ](https://t.me/vj_botz)
-║┣⪼📡Hᴏsᴛᴇᴅ ᴏɴ : Sᴜᴘᴇʀ Fᴀsᴛ
-║┣⪼🗣️Lᴀɴɢᴜᴀɢᴇ : Pʏᴛʜᴏɴ3
-║┣⪼📚Lɪʙʀᴀʀʏ : Pʏʀᴏɢʀᴀᴍ Gᴀᴛʜᴇʀ 2.11.0 
-║┣⪼🗒️Vᴇʀsɪᴏɴ : 0.18.3
+║┣⪼📃ʙᴏᴛ : [ꜰᴏʀᴡᴀʀᴅ ʙᴏᴛ](https://t.me/VJForwardBot)
+║┣⪼👦ᴄʀᴇᴀᴛᴏʀ : [ᴋɪɴɢ ᴠᴊ 👑](https://t.me/kingvj01)
+║┣⪼🤖ᴜᴘᴅᴀᴛᴇ : [ᴠᴊ ʙᴏᴛᴢ](https://t.me/vj_botz)
+║┣⪼📡ʜᴏsᴛᴇᴅ ᴏɴ : sᴜᴘᴇʀ ꜰᴀsᴛ
+║┣⪼🗣️ʟᴀɴɢᴜᴀɢᴇ : ᴘʏᴛʜᴏɴ3
+║┣⪼📚ʟɪʙʀᴀʀʏ : ᴘʏʀᴏɢʀᴀᴍ ɢᴀᴛʜᴇʀ 2.11.0 
+║┣⪼🗒️ᴠᴇʀsɪᴏɴ : 0.18.3
 ║╰━━━━━━━━━━━━━━━➣
 ╚══════════════════❍⊱❁۪۪
 </b>"""
@@ -53,76 +53,76 @@ class Script(object):
 ║╭━━━━━━━━━━━━━━━➣
 ║┣⪼**⏳ ʙᴏᴛ ᴜᴘᴛɪᴍᴇ:**`{}`
 ║┃
-║┣⪼**👱 Tᴏᴛᴀल Usᴇʀs:** `{}`
+║┣⪼**👱 ᴛᴏᴛᴀʟ ᴜsᴇʀs:** `{}`
 ║┃
-║┣⪼**🤖 Tᴏᴛᴀल Bᴏᴛ:** `{}`
+║┣⪼**🤖 ᴛᴏᴛᴀʟ ʙᴏᴛ:** `{}`
 ║┃
-║┣⪼**🔃 Fᴏʀᴡᴀʀᴅɪɴɢs:** `{}`
+║┣⪼**🔃 ꜰᴏʀᴡᴀʀᴅɪɴɢs:** `{}`
 ║┃
 ║╰━━━━━━━━━━━━━━━➣
 ╚══════════════════❍⊱❁۪۪
 """
-  FORWARD_START_TXT = """<b>Fᴏʀᴡᴀʀᴅɪɴɢ sᴛᴀʀᴛᴇᴅ🔥</b>
+  FORWARD_START_TXT = """<b>ꜰᴏʀᴡᴀʀᴅɪɴɢ sᴛᴀʀᴛᴇᴅ🔥</b>
 
-<b>Bot Name:</b> {}
-<b>Bot ID:</b> {}
-<b>From Channel:</b> {}
-<b>To Channel:</b> {}"""
+<b>ʙᴏᴛ ɴᴀᴍᴇ:</b> {}
+<b>ʙᴏᴛ ɪᴅ:</b> {}
+<b>ꜰʀᴏᴍ ᴄʜᴀɴɴᴇʟ:</b> {}
+<b>ᴛᴏ ᴄʜᴀɴɴᴇʟ:</b> {}"""
   
-  FORWARD_CANCEL_TXT = """<b>❌ ғᴏʀᴡᴀʀᴅɪɴɢ ᴄᴀɴᴄᴇʟʟᴇᴅ</b>
+  FORWARD_CANCEL_TXT = """<b>❌ ꜰᴏʀᴡᴀʀᴅɪɴɢ ᴄᴀɴᴄᴇʟʟᴇᴅ</b>
 
-<b>Bot Name:</b> {}
-<b>Bot ID:</b> {}
-<b>From Channel:</b> {}
-<b>To Channel:</b> {}"""
+<b>ʙᴏᴛ ɴᴀᴍᴇ:</b> {}
+<b>ʙᴏᴛ ɪᴅ:</b> {}
+<b>ꜰʀᴏᴍ ᴄʜᴀɴɴᴇʟ:</b> {}
+<b>ᴛᴏ ᴄʜᴀɴɴᴇʟ:</b> {}"""
 
-  FROM_MSG = "<b>❪ SET SOURCE CHAT ❫\n\nForward the last message or last message link of source chat.\n/cancel - cancel this process</b>"
-  TO_MSG = "<b>❪ CHOOSE TARGET CHAT ❫\n\nChoose your target chat from the given buttons.\n/cancel - Cancel this process</b>"
-  SKIP_MSG = "<b>❪ SET MESSAGE SKIPING NUMBER ❫</b>\n\n<b>Skip the message as much as you enter the number and the rest of the message will be forwarded\nDefault Skip Number =</b> <code>0</code>\n<code>eg: You enter 0 = 0 message skiped\n You enter 5 = 5 message skiped</code>\n/cancel <b>- cancel this process</b>"
-  CANCEL = "<b>Process Cancelled Succefully !</b>"
-  BOT_DETAILS = "<b><u>📄 BOT DETAILS</b></u>\n\n<b>➣ NAME:</b> <code>{}</code>\n<b>➣ BOT ID:</b> <code>{}</code>\n<b>➣ USERNAME:</b> @{}"
-  USER_DETAILS = "<b><u>📄 USERBOT DETAILS</b></u>\n\n<b>➣ NAME:</b> <code>{}</code>\n<b>➣ USER ID:</b> <code>{}</code>\n<b>➣ USERNAME:</b> @{}"  
-         
+  FROM_MSG = "<b>❪ sᴇᴛ sᴏᴜʀᴄᴇ ᴄʜᴀᴛ ❫\n\nꜰᴏʀᴡᴀʀᴅ ᴛʜᴇ ʟᴀsᴛ ᴍᴇssᴀɢᴇ ᴏʀ ʟᴀsᴛ ᴍᴇssᴀɢᴇ ʟɪɴᴋ ᴏꜰ sᴏᴜʀᴄᴇ ᴄʜᴀᴛ.\n/cancel - ᴄᴀɴᴄᴇʟ ᴛʜɪs ᴘʀᴏᴄᴇss</b>"
+  TO_MSG = "<b>❪ ᴄʜᴏᴏsᴇ ᴛᴀʀɢᴇᴛ ᴄʜᴀᴛ ❫\n\nᴄʜᴏᴏsᴇ ʏᴏᴜʀ ᴛᴀʀɢᴇᴛ ᴄʜᴀᴛ ꜰʀᴏᴍ ᴛʜᴇ ɢɪᴠᴇɴ ʙᴜᴛᴛᴏɴs.\n/cancel - ᴄᴀɴᴄᴇʟ ᴛʜɪs ᴘʀᴏᴄᴇss</b>"
+  SKIP_MSG = "<b>❪ sᴇᴛ ᴍᴇssᴀɢᴇ sᴋɪᴘɪɴɢ ɴᴜᴍʙᴇʀ ❫</b>\n\n<b>sᴋɪᴘ ᴛʜᴇ ᴍᴇssᴀɢᴇ ᴀs ᴍᴜᴄʜ ᴀs ʏᴏᴜ ᴇɴᴛᴇʀ ᴛʜᴇ ɴᴜᴍʙᴇʀ ᴀɴᴅ ᴛʜᴇ ʀᴇsᴛ ᴏꜰ ᴛʜᴇ ᴍᴇssᴀɢᴇ ᴡɪʟʟ ʙᴇ ꜰᴏʀᴡᴀʀᴅᴇᴅ\nᴅᴇꜰᴀᴜʟᴛ sᴋɪᴘ ɴᴜᴍʙᴇʀ =</b> <code>0</code>\n<code>ᴇɢ: ʏᴏᴜ ᴇɴᴛᴇʀ 0 = 0 ᴍᴇssᴀɢᴇ sᴋɪᴘᴇᴅ\n ʏᴏᴜ ᴇɴᴛᴇʀ 5 = 5 ᴍᴇssᴀɢᴇ sᴋɪᴘᴇᴅ</code>\n/cancel <b>- ᴄᴀɴᴄᴇʟ ᴛʜɪs ᴘʀᴏᴄᴇss</b>"
+  CANCEL = "<b>ᴘʀᴏᴄᴇss ᴄᴀɴᴄᴇʟʟᴇᴅ sᴜᴄᴄᴇꜰᴜʟʟʏ !</b>"
+  BOT_DETAILS = "<b><u>📄 ʙᴏᴛ ᴅᴇᴛᴀɪʟs</b></u>\n\n<b>➣ ɴᴀᴍᴇ:</b> <code>{}</code>\n<b>➣ ʙᴏᴛ ɪᴅ:</b> <code>{}</code>\n<b>➣ ᴜsᴇʀɴᴀᴍᴇ:</b> @{}"
+  USER_DETAILS = "<b><u>📄 ᴜsᴇʀʙᴏᴛ ᴅᴇᴛᴀɪʟs</b></u>\n\n<b>➣ ɴᴀᴍᴇ:</b> <code>{}</code>\n<b>➣ ᴜsᴇʀ ɪᴅ:</b> <code>{}</code>\n<b>➣ ᴜsᴇʀɴᴀᴍᴇ:</b> @{}"       
+  
   TEXTs = """
-╔════❰ ғᴏʀᴡᴀʀᴅ sᴛᴀᴛᴜs  ❱═❍⊱❁۪۪
+╔════❰ ꜰᴏʀᴡᴀʀᴅ sᴛᴀᴛᴜs  ❱═❍⊱❁۪۪
 ║╭━━━━━━━━━━━━━━━➣
-║┣⪼<b>🕵 ғᴇᴄʜᴇᴅ Msɢ :</b> <code>{}</code>
+║┣⪼<b>🕵 ꜰᴇᴛᴄʜᴇᴅ ᴍsɢ :</b> <code>{}</code>
 ║┃
-║┣⪼<b>✅ sᴜᴄᴄᴇғᴜʟʟʏ Fᴡᴅ :</b> <code>{}</code>
+║┣⪼<b>✅ sᴜᴄᴄᴇssꜰᴜʟʟʏ ꜰᴡᴅ :</b> <code>{}</code>
 ║┃
-║┣⪼<b>👥 ᴅᴜᴘʟɪᴄᴀᴛᴇ Msɢ :</b> <code>{}</code>
+║┣⪼<b>👥 ᴅᴜᴘʟɪᴄᴀᴛᴇ ᴍsɢ :</b> <code>{}</code>
 ║┃
-║┣⪼<b>🗑 ᴅᴇʟᴇᴛᴇᴅ Msɢ :</b> <code>{}</code>
+║┣⪼<b>🗑 ᴅᴇʟᴇᴛᴇᴅ ᴍsɢ :</b> <code>{}</code>
 ║┃
-║┣⪼<b>🪆 Sᴋɪᴘᴘᴇᴅ Msɢ :</b> <code>{}</code>
+║┣⪼<b>🪆 sᴋɪᴘᴘᴇᴅ ᴍsɢ :</b> <code>{}</code>
 ║┃
-║┣⪼<b>🔁 Fɪʟᴛᴇʀᴇᴅ Msɢ :</b> <code>{}</code>
+║┣⪼<b>🔁 ꜰɪʟᴛᴇʀᴇᴅ ᴍsɢ :</b> <code>{}</code>
 ║┃
-║┣⪼<b>📊 Cᴜʀʀᴇɴᴛ Sᴛᴀᴛᴜs:</b> <code>{}</code>
+║┣⪼<b>📊 ᴄᴜʀʀᴇɴᴛ sᴛᴀᴛᴜs:</b> <code>{}</code>
 ║┃
-║┣⪼<b>𖨠 Pᴇʀᴄᴇɴᴛᴀɢᴇ:</b> <code>{}</code> %
+║┣⪼<b>𖨠 ᴘᴇʀᴄᴇɴᴛᴀɢᴇ:</b> <code>{}</code> %
 ║╰━━━━━━━━━━━━━━━➣ 
 ╚════❰ {} ❱══❍⊱❁۪۪
 """
 
 
-  TEXT = """<b>━━━━━ ❰ ғᴏʀᴡᴀʀᴅ sᴛᴀᴛᴜs ❱ ━━━━━</b>
+  TEXT = """<b>━━━━━ ❰ ꜰᴏʀᴡᴀʀᴅ sᴛᴀᴛᴜs ❱ ━━━━━</b>
 
-<b>🤖 Bot Name      :</b>   <code>{}</code>
-<b>🆔 Bot ID        :</b>   <code>{}</code>
-<b>#️⃣ From Channel  :</b>   <code>{}</code>
-<b>#️⃣ To Channel    :</b>   <code>{}</code>
+<b>🤖 ʙᴏᴛ ɴᴀᴍᴇ      :</b>   <code>{}</code>
+<b>🆔 ʙᴏᴛ ɪᴅ          :</b>   <code>{}</code>
+<b>#️⃣ ꜰʀᴏᴍ ᴄʜᴀɴɴᴇʟ  :</b>   <code>{}</code>
+<b>#️⃣ ᴛᴏ ᴄʜᴀɴɴᴇʟ    :</b>   <code>{}</code>
 
 <b>🧾 ᴛᴏᴛᴀʟ ᴍᴇssᴀɢᴇs :</b>   <code>{}</code>
 
-<b>📥 ғᴇᴛᴄʜᴇᴅ         :</b>   <code>{}</code>
-<b>🔁 ғᴏʀᴡᴀʀᴅᴇᴅ    :</b>   <code>{}</code>
+<b>📥 ꜰᴇᴛᴄʜᴇᴅ         :</b>   <code>{}</code>
+<b>🔁 ꜰᴏʀᴡᴀʀᴅᴇᴅ    :</b>   <code>{}</code>
 <b>⏳ ʀᴇᴍᴀɪɴɪɴɢ     :</b>   <code>{}</code>
 
 <b>🔂 ᴅᴜᴘʟɪᴄᴀᴛᴇs   :</b>   <code>{}</code>
 <b>🗑️ ᴅᴇʟᴇᴛᴇᴅ         :</b>   <code>{}</code>
 <b>⛔ sᴋɪᴘᴘᴇᴅ         :</b>   <code>{}</code>
-<b>🔎 ғɪʟᴛᴇʀᴇᴅ        :</b>   <code>{}</code>
+<b>🔎 ꜰɪʟᴛᴇʀᴇᴅ        :</b>   <code>{}</code>
 
 <b>⚙️ ᴄᴜʀʀᴇɴᴛ        :</b>   <code>{}</code>
 <b>🕒 ᴇsᴛ ᴛɪᴍᴇ        :</b>   <code>{}</code>
@@ -132,26 +132,26 @@ class Script(object):
 
 
 
-  DUPLICATE_TEXT = """
-╔════❰ ᴜɴᴇǫᴜɪғʏ sᴛᴀᴛᴜs ❱═❍⊱❁۪۪
-║╭━━━━━━━━━━━━━━━➣
-║┣⪼ <b>ғᴇᴛᴄʜᴇᴅ ғɪʟᴇs:</b> <code>{}</code>
-║┃
-║┣⪼ <b>ᴅᴜᴘʟɪᴄᴀᴛᴇ ᴅᴇʟᴇᴛᴇᴅ:</b> <code>{}</code> 
-║╰━━━━━━━━━━━━━━━➣
-╚════❰ {} ❱══❍⊱❁۪۪
-"""
-  DOUBLE_CHECK = """<b><u>DOUBLE CHECKING ⚠️</b></u>
-<code>Before forwarding the messages Click the Yes button only after checking the following</code>
+  DUPLICATE_TEXT = """<b>━━━━━ ❰ ᴜɴᴇǫᴜɪꜰʏ sᴛᴀᴛᴜs ❱ ━━━━━</b>
 
-<b>★ YOUR BOT:</b> [{botname}](t.me/{botuname})
-<b>★ FROM CHANNEL:</b> `{from_chat}`
-<b>★ TO CHANNEL:</b> `{to_chat}`
-<b>★ SKIP MESSAGES:</b> `{skip}`
+<b>ꜰᴇᴛᴄʜᴇᴅ ꜰɪʟᴇs:</b> <code>{}</code>
 
-<i>° [{botname}](t.me/{botuname}) must be admin in **TARGET CHAT**</i> (`{to_chat}`)
-<i>° If the **SOURCE CHAT** is private your userbot must be member or your bot must be admin in there also</b></i>
+<b>ᴅᴜᴘʟɪᴄᴀᴛᴇ ᴅᴇʟᴇᴛᴇᴅ:</b> <code>{}</code> 
 
-<b>If the above is checked then the yes button can be clicked</b>"""
+<b>━━━━━━ ❰ {} ❱ ━━━━━━</b>"""
+
+
+  DOUBLE_CHECK = """<b><u>ᴅᴏᴜʙʟᴇ ᴄʜᴇᴄᴋɪɴɢ ⚠️</b></u>
+<code>ʙᴇꜰᴏʀᴇ ꜰᴏʀᴡᴀʀᴅɪɴɢ ᴛʜᴇ ᴍᴇssᴀɢᴇs ᴄʟɪᴄᴋ ᴛʜᴇ ʏᴇs ʙᴜᴛᴛᴏɴ ᴏɴʟʏ ᴀꜰᴛᴇʀ ᴄʜᴇᴄᴋɪɴɢ ᴛʜᴇ ꜰᴏʟʟᴏᴡɪɴɢ</code>
+
+<b>★ ʏᴏᴜʀ ʙᴏᴛ:</b> [{botname}](t.me/{botuname})
+<b>★ ꜰʀᴏᴍ ᴄʜᴀɴɴᴇʟ:</b> `{from_chat}`
+<b>★ ᴛᴏ ᴄʜᴀɴɴᴇʟ:</b> `{to_chat}`
+<b>★ sᴋɪᴘ ᴍᴇssᴀɢᴇs:</b> `{skip}`
+
+<i>° [{botname}](t.me/{botuname}) ᴍᴜsᴛ ʙᴇ ᴀᴅᴍɪɴ ɪɴ **ᴛᴀʀɢᴇᴛ ᴄʜᴀᴛ**</i> (`{to_chat}`)
+<i>° ɪꜰ ᴛʜᴇ **sᴏᴜʀᴄᴇ ᴄʜᴀᴛ** ɪs ᴘʀɪᴠᴀᴛᴇ ʏᴏᴜʀ ᴜsᴇʀʙᴏᴛ ᴍᴜsᴛ ʙᴇ ᴍᴇᴍʙᴇʀ ᴏʀ ʏᴏᴜʀ ʙᴏᴛ ᴍᴜsᴛ ʙᴇ ᴀᴅᴍɪɴ ɪɴ ᴛʜᴇʀᴇ ᴀʟsᴏ</b></i>
+
+<b>ɪꜰ ᴛʜᴇ ᴀʙᴏᴠᴇ ɪs ᴄʜᴇᴄᴋᴇᴅ ᴛʜᴇɴ ᴛʜᴇ ʏᴇs ʙᴜᴛᴛᴏɴ ᴄᴀɴ ʙᴇ ᴄʟɪᴄᴋᴇᴅ</b>"""
   
-  SETTINGS_TXT = """<b>change your settings as your wish</b>"""
+  SETTINGS_TXT = """<b>ᴄʜᴀɴɢᴇ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs ᴀs ʏᴏᴜʀ ᴡɪsʜ</b>"""
