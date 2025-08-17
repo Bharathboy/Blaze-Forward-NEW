@@ -108,6 +108,11 @@ class Script(object):
 
   TEXT = """<b>━━━━━ ❰ ғᴏʀᴡᴀʀᴅ sᴛᴀᴛᴜs ❱ ━━━━━</b>
 
+<b>🤖 Bot Name      :</b>   <code>{}</code>
+<b>🆔 Bot ID        :</b>   <code>{}</code>
+<b>#️⃣ From Channel  :</b>   <code>{}</code>
+<b>#️⃣ To Channel    :</b>   <code>{}</code>
+
 <b>🧾 ᴛᴏᴛᴀʟ ᴍᴇssᴀɢᴇs :</b>   <code>{}</code>
 
 <b>📥 ғᴇᴛᴄʜᴇᴅ         :</b>   <code>{}</code>
