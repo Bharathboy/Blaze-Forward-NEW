@@ -4,7 +4,7 @@ from typing import Optional
 
 from .utils import STS
 from database import db
-from config import temp
+from config import temp, Config
 from script import Script
 from pyrogram import Client, filters, enums
 from pyrogram.errors import FloodWait, MessageNotModified
@@ -121,9 +121,20 @@ async def ask_for_to_channel(bot: Client, user_id: int, chat_id: int, message=No
         await bot.send_message(chat_id, prompt_message)
 
 
+def get_task_limit(user_id):
+    premium_status = Config.PREMIUM_USERS.get(user_id)
+    return Config.TASK_LIMITS.get(premium_status, Config.TASK_LIMITS["default"])
+
+
 @Client.on_message(filters.private & filters.command(COMMANDS))
 async def forward_command(bot: Client, message):
     user_id = message.from_user.id
+    task_limit = get_task_limit(user_id)
+    active_tasks = len(temp.lock.get(user_id, []))
+
+    if active_tasks >= task_limit:
+        return await message.reply_text(f"You have reached your maximum limit of {task_limit} concurrent tasks. Please wait for your other tasks to complete.")
+
     # reset any previous session
     temp.FORWARD_CONV.pop(user_id, None)
 
