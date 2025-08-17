@@ -76,9 +76,10 @@ async def pub_(bot, message):
       return await m.edit(e)
     await msg_edit(m, "<code>processing..</code>")
     try: 
-       await client.get_messages(sts.get("FROM"), sts.get("limit"))
-    except:
-       await msg_edit(m, f"**Source chat may be a private channel / group. Use userbot (user must be member over there) or  if Make Your [Bot](t.me/{_bot['username']}) an admin over there**", retry_btn(frwd_id), True)
+       from_chat = await client.get_chat(sts.get("FROM"))
+       to_chat = await client.get_chat(sts.get("TO"))
+    except Exception as e:
+       await msg_edit(m, f"**Error:**\n`{e}`\n\n**Source/Target chat may be a private channel / group. Use userbot (user must be member over there) or make your [Bot](t.me/{_bot['username']}) an admin over there**", retry_btn(frwd_id), True)
        return await stop(client, user, i.bot_id)
     try:
        k = await client.send_message(i.TO, "Testing")
@@ -97,7 +98,9 @@ async def pub_(bot, message):
             user_have_db = True
     temp.forwardings += 1
     await db.add_frwd(user, i.bot_id)
-    await send(client, user, "<b>Fᴏʀᴡᴀᴅɪɴɢ sᴛᴀʀᴛᴇᴅ🔥</b>")
+    
+    await send(client, user, Script.FORWARD_START_TXT.format(_bot['name'], _bot['id'], from_chat.title, to_chat.title))
+
     sts.add(time=True)
     sleep = 1 if _bot['is_bot'] else 10
     await msg_edit(m, "<code>processing...</code>") 
@@ -113,7 +116,7 @@ async def pub_(bot, message):
       pling=0
       await edit(user, m, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts)
       async for message in iter_messages(client, chat_id=sts.get("FROM"), limit=sts.get("limit"), offset=sts.get("skip"), filters=filter, max_size=max_size):
-            if await is_cancelled(client, user, m, sts, i.bot_id):
+            if await is_cancelled(client, user, m, sts, i.bot_id, _bot, from_chat, to_chat):
                if user_have_db:
                   await user_db.drop_all()
                   await user_db.close()
@@ -292,14 +295,14 @@ async def edit(user, msg, title, status, sts):
     except Exception as e:
         logging.error(e)
 
-async def is_cancelled(client, user, msg, sts, bot_id):
+async def is_cancelled(client, user, msg, sts, bot_id, bot_info, from_chat, to_chat):
    if temp.CANCEL.get(user, {}).get(bot_id):
       if sts.TO in temp.IS_FRWD_CHAT:
          temp.IS_FRWD_CHAT.remove(sts.TO)
       await edit(user, msg, 'ᴄᴀɴᴄᴇʟʟᴇᴅ', "ᴄᴀɴᴄᴇʟʟᴇᴅ", sts)
-      await send(client, user, "<b>❌ ғᴏʀᴡᴀᴅɪɴɢ ᴄᴀɴᴄᴇʟʟᴇᴅ</b>")
+      await send(client, user, Script.FORWARD_CANCEL_TXT.format(bot_info['name'], bot_info['id'], from_chat.title, to_chat.title))
       await stop(client, user, bot_id)
-      return True
+      return True 
    return False 
 
 async def stop(client, user, bot_id):
@@ -507,9 +510,10 @@ async def restart_pending_forwads(bot, user):
        except:
           return await db.rmve_frwd(user_id, bot_id)
        try: 
-          await client.get_messages(sts.get("FROM"), sts.get("limit"))
-       except:
-          await msg_edit(m, f"**Source chat may be a private channel / group. Use userbot (user must be member over there) or  if Make Your [Bot](t.me/{_bot['username']}) an admin over there**", retry_btn(forward_id), True)
+          from_chat = await client.get_chat(sts.get("FROM"))
+          to_chat = await client.get_chat(sts.get("TO"))
+       except Exception as e:
+          await msg_edit(m, f"**Error:**\n`{e}`\n\n**Source/Target chat may be a private channel / group. Use userbot (user must be member over there) or make your [Bot](t.me/{_bot['username']}) an admin over there**", retry_btn(forward_id), True)
           return await stop(client, user_id, bot_id)
        try:
           k = await client.send_message(i.TO, "Testing")
@@ -550,7 +554,7 @@ async def restart_pending_forwads(bot, user):
       pling=0
       await edit(user_id, m, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts)
       async for message in iter_messages(client, chat_id=sts.get("FROM"), limit=sts.get("limit"), offset=skiping, filters=filter, max_size=max_size):
-            if await is_cancelled(client, user_id, m, sts, bot_id):
+            if await is_cancelled(client, user_id, m, sts, bot_id, _bot, from_chat, to_chat):
                 if user_have_db:
                    await user_db.drop_all()
                    await user_db.close()

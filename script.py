@@ -1,7 +1,7 @@
 import os
 from config import Config
 
-class  Script(object):
+class Script(object):
   START_TXT = """<b>ʜɪ {}
   
 ɪ'ᴍ ᴀ ᴀᴅᴠᴀɴᴄᴇᴅ ꜰᴏʀᴡᴀʀᴅ ʙᴏᴛ
@@ -33,7 +33,7 @@ class  Script(object):
 ► __if the **From Channel** is private your userbot must be member in there or your bot must need admin permission in there also__
 ► __Then use /forward to forward messages__
 
-► ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ [ᴛᴜᴛᴏʀɪᴀʟ ᴠɪᴅᴇᴏ](https://youtu.be/wO1FE-lf35I)</b>"""
+► ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ [ᴛᴜᴛᴏʀɪᴀल ᴠɪᴅᴇᴏ](https://youtu.be/wO1FE-lf35I)</b>"""
   
   ABOUT_TXT = """<b>
 ╔════❰ ғᴏʀᴡᴀʀᴅ ʙᴏᴛ ❱═❍⊱❁۪۪
@@ -53,15 +53,29 @@ class  Script(object):
 ║╭━━━━━━━━━━━━━━━➣
 ║┣⪼**⏳ ʙᴏᴛ ᴜᴘᴛɪᴍᴇ:**`{}`
 ║┃
-║┣⪼**👱 Tᴏᴛᴀʟ Usᴇʀs:** `{}`
+║┣⪼**👱 Tᴏᴛᴀल Usᴇʀs:** `{}`
 ║┃
-║┣⪼**🤖 Tᴏᴛᴀʟ Bᴏᴛ:** `{}`
+║┣⪼**🤖 Tᴏᴛᴀल Bᴏᴛ:** `{}`
 ║┃
 ║┣⪼**🔃 Fᴏʀᴡᴀʀᴅɪɴɢs:** `{}`
 ║┃
 ║╰━━━━━━━━━━━━━━━➣
 ╚══════════════════❍⊱❁۪۪
 """
+  FORWARD_START_TXT = """<b>Fᴏʀᴡᴀʀᴅɪɴɢ sᴛᴀʀᴛᴇᴅ🔥</b>
+
+<b>Bot Name:</b> {}
+<b>Bot ID:</b> {}
+<b>From Channel:</b> {}
+<b>To Channel:</b> {}"""
+  
+  FORWARD_CANCEL_TXT = """<b>❌ ғᴏʀᴡᴀʀᴅɪɴɢ ᴄᴀɴᴄᴇʟʟᴇᴅ</b>
+
+<b>Bot Name:</b> {}
+<b>Bot ID:</b> {}
+<b>From Channel:</b> {}
+<b>To Channel:</b> {}"""
+
   FROM_MSG = "<b>❪ SET SOURCE CHAT ❫\n\nForward the last message or last message link of source chat.\n/cancel - cancel this process</b>"
   TO_MSG = "<b>❪ CHOOSE TARGET CHAT ❫\n\nChoose your target chat from the given buttons.\n/cancel - Cancel this process</b>"
   SKIP_MSG = "<b>❪ SET MESSAGE SKIPING NUMBER ❫</b>\n\n<b>Skip the message as much as you enter the number and the rest of the message will be forwarded\nDefault Skip Number =</b> <code>0</code>\n<code>eg: You enter 0 = 0 message skiped\n You enter 5 = 5 message skiped</code>\n/cancel <b>- cancel this process</b>"
