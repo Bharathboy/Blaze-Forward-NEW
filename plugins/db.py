@@ -28,6 +28,7 @@ class MongoDB:
             self.client.close()
 
     async def add_file(self, file_id):
+        print(file_id)
         file = {"file_id": file_id}
         return await self.files.insert_one(file)
         

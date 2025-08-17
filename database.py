@@ -7,10 +7,10 @@ class Db:
         self._client = motor.motor_asyncio.AsyncIOMotorClient(uri)
         self.db = self._client[database_name]
         self.bot = self.db.bots
-        self.userbot = self.db.userbot 
+        self.userbot = self.db.userbot
         self.col = self.db.users
         self.nfy = self.db.notify
-        self.chl = self.db.channels 
+        self.chl = self.db.channels
 
     def new_user(self, id, name):
         return dict(
@@ -104,37 +104,43 @@ class Db:
         user = await self.col.find_one({'id':int(id)})
         if user:
             return user.get('configs', default)
-        return default 
+        return default
 
     async def add_bot(self, datas):
-       if not await self.is_bot_exist(datas['user_id']):
-          await self.bot.insert_one(datas)
+        await self.bot.insert_one(datas)
 
-    async def remove_bot(self, user_id):
-       await self.bot.delete_many({'user_id': int(user_id)})
+    async def remove_bot(self, user_id, bot_id):
+        await self.bot.delete_one({'user_id': int(user_id), 'id': int(bot_id)})
 
-    async def get_bot(self, user_id: int):
-       bot = await self.bot.find_one({'user_id': user_id})
-       return bot if bot else None
+    async def get_bot(self, user_id: int, bot_id: int):
+        bot = await self.bot.find_one({'user_id': user_id, 'id': bot_id})
+        return bot if bot else None
+    
+    async def get_bots(self, user_id: int):
+        bots = self.bot.find({'user_id': user_id})
+        return [bot async for bot in bots]
 
-    async def is_bot_exist(self, user_id):
-       bot = await self.bot.find_one({'user_id': user_id})
-       return bool(bot)
-   
+    async def is_bot_exist(self, user_id, bot_id):
+        bot = await self.bot.find_one({'user_id': user_id, 'id': bot_id})
+        return bool(bot)
+
     async def add_userbot(self, datas):
-       if not await self.is_userbot_exist(datas['user_id']):
-          await self.userbot.insert_one(datas)
+        await self.userbot.insert_one(datas)
 
-    async def remove_userbot(self, user_id):
-       await self.userbot.delete_many({'user_id': int(user_id)})
+    async def remove_userbot(self, user_id, bot_id):
+        await self.userbot.delete_one({'user_id': int(user_id), 'id': int(bot_id)})
 
-    async def get_userbot(self, user_id: int):
-       bot = await self.userbot.find_one({'user_id': user_id})
-       return bot if bot else None
+    async def get_userbot(self, user_id: int, bot_id: int):
+        bot = await self.userbot.find_one({'user_id': user_id, 'id': bot_id})
+        return bot if bot else None
+    
+    async def get_userbots(self, user_id: int):
+        bots = self.userbot.find({'user_id': user_id})
+        return [bot async for bot in bots]
 
-    async def is_userbot_exist(self, user_id):
-       bot = await self.userbot.find_one({'user_id': user_id})
-       return bool(bot)
+    async def is_userbot_exist(self, user_id, bot_id):
+        bot = await self.userbot.find_one({'user_id': user_id, 'id': bot_id})
+        return bool(bot)
     
     async def in_channel(self, user_id: int, chat_id: int) -> bool:
        channel = await self.chl.find_one({"user_id": int(user_id), "chat_id": int(chat_id)})
@@ -167,12 +173,17 @@ class Db:
             filters.append(str(k))
        return filters
 
-    async def add_frwd(self, user_id):
-       return await self.nfy.insert_one({'user_id': int(user_id)})
+    async def add_frwd(self, user_id, bot_id):
+       return await self.nfy.insert_one({'user_id': int(user_id), 'bot_id': int(bot_id)})
 
-    async def rmve_frwd(self, user_id=0, all=False):
-       data = {} if all else {'user_id': int(user_id)}
-       return await self.nfy.delete_many(data)
+    async def rmve_frwd(self, user_id=0, bot_id=0, all=False):
+        if all:
+            data = {}
+        elif bot_id:
+            data = {'user_id': int(user_id), 'bot_id': int(bot_id)}
+        else:
+            data = {'user_id': int(user_id)}
+        return await self.nfy.delete_many(data)
 
     async def get_all_frwd(self):
        return self.nfy.find({})
@@ -181,11 +192,14 @@ class Db:
         c = await self.nfy.count_documents({})
         return c
         
-    async def is_forwad_exit(self, user):
-        u = await self.nfy.find_one({'user_id': user})
+    async def is_forwad_exit(self, user, bot_id=None):
+        if bot_id:
+            u = await self.nfy.find_one({'user_id': user, 'bot_id': bot_id})
+        else:
+            u = await self.nfy.find_one({'user_id': user})
         return bool(u)
         
-    async def get_forward_details(self, user_id):
+    async def get_forward_details(self, user_id, bot_id=None):
         defult = {
             'chat_id': None,
             'forward_id': None,
@@ -203,12 +217,15 @@ class Db:
             'filtered' :0,
             'client_type': None
         }
-        user = await self.nfy.find_one({'user_id': int(user_id)})
+        if bot_id:
+            user = await self.nfy.find_one({'user_id': int(user_id), 'bot_id': int(bot_id)})
+        else:
+            user = await self.nfy.find_one({'user_id': int(user_id)})
         if user:
             return user.get('details', defult)
         return defult
    
-    async def update_forward(self, user_id, details):
-        await self.nfy.update_one({'user_id': user_id}, {'$set': {'details': details}})
-        
+    async def update_forward(self, user_id, bot_id, details):
+        await self.nfy.update_one({'user_id': user_id, 'bot_id': bot_id}, {'$set': {'details': details}})
+
 db = Db(Config.DATABASE_URI, Config.DATABASE_NAME)

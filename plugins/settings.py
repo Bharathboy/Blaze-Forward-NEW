@@ -1,7 +1,3 @@
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 import asyncio 
 from database import Db, db
 from script import Script
@@ -12,20 +8,12 @@ from .db import connect_user_db
 
 CLIENT = CLIENT()
 
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 @Client.on_message(filters.command('settings'))
 async def settings(client, message):
    await message.reply_text(
      "<b>Hᴇʀᴇ Is Tʜᴇ Sᴇᴛᴛɪɴɢs Pᴀɴᴇʟ⚙\n\nᴄʜᴀɴɢᴇ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs ᴀs ʏᴏᴜʀ ᴡɪsʜ 👇</b>",
      reply_markup=main_buttons()
      )
-
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
 
 @Client.on_callback_query(filters.regex(r'^settings'))
 async def settings_query(bot, query):
@@ -42,22 +30,22 @@ async def settings_query(bot, query):
          reply_markup=extra_buttons())
   elif type=="bots":
      buttons = [] 
-     _bot = await db.get_bot(user_id)
-     usr_bot = await db.get_userbot(user_id)
-     if _bot is not None:
+     bots = await db.get_bots(user_id)
+     userbots = await db.get_userbots(user_id)
+     
+     for _bot in bots:
         buttons.append([InlineKeyboardButton(_bot['name'],
-                         callback_data=f"settings#editbot")])
-     else:
-        buttons.append([InlineKeyboardButton('✚ Add bot ✚', 
-                         callback_data="settings#addbot")])
-     if usr_bot is not None:
+                         callback_data=f"settings#editbot_{_bot['id']}")])
+     for usr_bot in userbots:
         buttons.append([InlineKeyboardButton(usr_bot['name'],
-                         callback_data=f"settings#edituserbot")])
-     else:
-        buttons.append([InlineKeyboardButton('✚ Add User bot ✚', 
-                         callback_data="settings#adduserbot")])
-        buttons.append([InlineKeyboardButton('✚ ʟᴏɢɪɴ ᴜsᴇʀ ʙᴏᴛ ✚', 
-                         callback_data="settings#addlogin")])
+                         callback_data=f"settings#edituserbot_{usr_bot['id']}")])
+
+     buttons.append([InlineKeyboardButton('✚ Add bot ✚', 
+                      callback_data="settings#addbot")])
+     buttons.append([InlineKeyboardButton('✚ Add User bot ✚', 
+                      callback_data="settings#adduserbot")])
+     buttons.append([InlineKeyboardButton('✚ ʟᴏɢɪɴ ᴜsᴇʀ ʙᴏᴛ ✚', 
+                      callback_data="settings#addlogin")])
      buttons.append([InlineKeyboardButton('back', 
                       callback_data="settings#main")])
      await query.message.edit_text(
@@ -66,8 +54,8 @@ async def settings_query(bot, query):
 
   elif type=="addbot":
      await query.message.delete()
-     bot = await CLIENT.add_bot(bot, query)
-     if bot != True: return
+     bot_instance = await CLIENT.add_bot(bot, query)
+     if not bot_instance: return
      await query.message.reply_text(
         "<b>bot token successfully added to db</b>",
         reply_markup=InlineKeyboardMarkup(buttons))
@@ -75,7 +63,7 @@ async def settings_query(bot, query):
   elif type == "addlogin":
      await query.message.delete()
      user = await CLIENT.add_login(bot, query)
-     if user != True: return 
+     if not user: return 
      await query.message.reply_text(
         "<b>sᴜᴄᴄᴇssғᴜʟʟʏ ʟᴏɢɪɴ ᴛᴏ ᴅʙ ✅</b>",
         reply_markup=InlineKeyboardMarkup(buttons))
@@ -83,7 +71,7 @@ async def settings_query(bot, query):
   elif type=="adduserbot":
      await query.message.delete()
      user = await CLIENT.add_session(bot, query)
-     if user != True: return
+     if not user: return
      await query.message.reply_text(
         "<b>session successfully added to db ✅</b>",
         reply_markup=InlineKeyboardMarkup(buttons))
@@ -121,38 +109,42 @@ async def settings_query(bot, query):
         "<b>Successfully updated</b>" if chat else "<b>This channel already added</b>",
         reply_markup=InlineKeyboardMarkup(buttons))
 
-  elif type=="editbot": 
-     bot = await db.get_bot(user_id)
-     TEXT = Script.BOT_DETAILS if bot['is_bot'] else Script.USER_DETAILS
-     buttons = [[InlineKeyboardButton('❌ Remove ❌', callback_data=f"settings#removebot")
+  elif type.startswith("editbot"): 
+     bot_id = int(type.split('_')[1])
+     bot_instance = await db.get_bot(user_id, bot_id)
+     TEXT = Script.BOT_DETAILS
+     buttons = [[InlineKeyboardButton('❌ Remove ❌', callback_data=f"settings#removebot_{bot_id}")
                ],
                [InlineKeyboardButton('back', callback_data="settings#bots")]]
      await query.message.edit_text(
-        TEXT.format(bot['name'], bot['id'], bot['username']),
+        TEXT.format(bot_instance['name'], bot_instance['id'], bot_instance['username']),
         reply_markup=InlineKeyboardMarkup(buttons))
      
-  elif type=="edituserbot": 
-     bot = await db.get_userbot(user_id)
+  elif type.startswith("edituserbot"): 
+     bot_id = int(type.split('_')[1])
+     bot_instance = await db.get_userbot(user_id, bot_id)
      TEXT = Script.USER_DETAILS
-     buttons = [[InlineKeyboardButton('❌ Remove ❌', callback_data=f"settings#removeuserbot")
+     buttons = [[InlineKeyboardButton('❌ Remove ❌', callback_data=f"settings#removeuserbot_{bot_id}")
                ],
                [InlineKeyboardButton('back', callback_data="settings#bots")]]
      await query.message.edit_text(
-        TEXT.format(bot['name'], bot['id'], bot['username']),
+        TEXT.format(bot_instance['name'], bot_instance['id'], bot_instance['username']),
         reply_markup=InlineKeyboardMarkup(buttons))
      
-  elif type=="removebot":
-     await db.remove_bot(user_id)
+  elif type.startswith("removebot"):
+     bot_id = int(type.split('_')[1])
+     await db.remove_bot(user_id, bot_id)
      await query.message.edit_text(
         "<b>successfully updated</b>",
         reply_markup=InlineKeyboardMarkup(buttons))
      
-  elif type=="removeuserbot":
-     await db.remove_userbot(user_id)
+  elif type.startswith("removeuserbot"):
+     bot_id = int(type.split('_')[1])
+     await db.remove_userbot(user_id, bot_id)
      await query.message.edit_text(
         "<b>successfully updated</b>",
         reply_markup=InlineKeyboardMarkup(buttons))
-     
+
   elif type.startswith("editchannels"): 
      chat_id = type.split('_')[1]
      chat = await db.get_channel_details(user_id, chat_id)
@@ -471,10 +463,6 @@ async def settings_query(bot, query):
     alert = type.split('_')[1]
     await query.answer(alert, show_alert=True)
 
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 def extra_buttons():
    buttons = [[
        InlineKeyboardButton('💾 Mɪɴ Sɪᴢᴇ Lɪᴍɪᴛ',
@@ -492,10 +480,6 @@ def extra_buttons():
                     callback_data=f'settings#main')
        ]]
    return InlineKeyboardMarkup(buttons)
-
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
 
 def main_buttons():
   buttons = [[
@@ -522,10 +506,6 @@ def main_buttons():
        ]]
   return InlineKeyboardMarkup(buttons)
 
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 def size_limit(limit):
    if str(limit) == "None":
       return None, ""
@@ -533,10 +513,6 @@ def size_limit(limit):
       return True, "more than"
    else:
       return False, "less than"
-
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
 
 def extract_btn(datas):
     i = 0
@@ -553,10 +529,6 @@ def extract_btn(datas):
             btn[-1].append(InlineKeyboardButton(data, f'settings#alert_{data}'))
             i += 1
     return btn 
-
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
 
 def maxsize_button(size):
   buttons = [[
@@ -593,10 +565,6 @@ def maxsize_button(size):
      ]]
   return InlineKeyboardMarkup(buttons)
 
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 def size_button(size):
   buttons = [[
        InlineKeyboardButton('💾 Min Size Limit',
@@ -631,10 +599,6 @@ def size_button(size):
                     callback_data="settings#extra")
      ]]
   return InlineKeyboardMarkup(buttons)
-
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
 
 async def filters_buttons(user_id):
   filter = await get_configs(user_id)
@@ -677,10 +641,6 @@ async def filters_buttons(user_id):
        ]]
   return InlineKeyboardMarkup(buttons) 
 
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 async def next_filters_buttons(user_id):
   filter = await get_configs(user_id)
   filters = filter['filters']
@@ -721,8 +681,4 @@ async def next_filters_buttons(user_id):
        InlineKeyboardButton('End ⫸',
                     callback_data="settings#main")
        ]]
-  return InlineKeyboardMarkup(buttons) 
-
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
+  return InlineKeyboardMarkup(buttons)

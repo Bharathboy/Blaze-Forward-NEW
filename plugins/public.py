@@ -1,7 +1,3 @@
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 import re
 import asyncio
 from typing import Optional
@@ -84,7 +80,7 @@ async def send_confirmation(bot: Client, user_id: int, message):
     )
 
     # persist the forwarding config in STS
-    STS(forward_id).store(fromid, toid, skipno, last_msg_id, client_type)
+    STS(forward_id).store(fromid, toid, skipno, last_msg_id, client_type, account.get('id'))
 
 
 async def ask_for_to_channel(bot: Client, user_id: int, chat_id: int, message=None):
@@ -131,34 +127,32 @@ async def forward_command(bot: Client, message):
     # reset any previous session
     temp.FORWARD_CONV.pop(user_id, None)
 
-    bot_account = await db.get_bot(user_id)
-    userbot_account = await db.get_userbot(user_id)
-
-    if not bot_account and not userbot_account:
+    bots = await db.get_bots(user_id)
+    userbots = await db.get_userbots(user_id)
+    
+    if not bots and not userbots:
         return await message.reply_text("<code>You didn't add any bot. Please add a bot using /settings !</code>")
 
-    temp.FORWARD_CONV[user_id] = {
-        'bot_account': bot_account, 'userbot_account': userbot_account}
+    temp.FORWARD_CONV[user_id] = {}
+    
+    buttons = []
+    for _bot in bots:
+        if _bot['id'] not in temp.lock.get(user_id, []):
+            buttons.append([InlineKeyboardButton(
+                f"Bot: {_bot.get('name', 'N/A')}", callback_data=f"fwd:client:bot:{_bot['id']}")])
+    for usr_bot in userbots:
+        if usr_bot['id'] not in temp.lock.get(user_id, []):
+            buttons.append([InlineKeyboardButton(
+                f"Userbot: {usr_bot.get('name', 'N/A')}", callback_data=f"fwd:client:userbot:{usr_bot['id']}")])
+    
+    if not buttons:
+        return await message.reply_text("All your bots are currently busy. Please wait for a job to complete.")
 
-    if bot_account and not userbot_account:
-        temp.FORWARD_CONV[user_id]['client_type'] = 'bot'
-        await ask_for_to_channel(bot, user_id, message.chat.id)
-    elif userbot_account and not bot_account:
-        temp.FORWARD_CONV[user_id]['client_type'] = 'userbot'
-        await ask_for_to_channel(bot, user_id, message.chat.id)
-    else:
-        # user has both -> ask which to use
-        buttons = [
-            [InlineKeyboardButton(
-                f"Bot: {bot_account.get('name', 'N/A')}", callback_data="fwd:client:bot")],
-            [InlineKeyboardButton(
-                f"Userbot: {userbot_account.get('name', 'N/A')}", callback_data="fwd:client:userbot")],
-            [InlineKeyboardButton("Cancel", callback_data="fwd:cancel")]
-        ]
-        await message.reply_text(
-            "You have both a bot and a userbot configured.\n\nWhich one would you like to use for this forward?",
-            reply_markup=InlineKeyboardMarkup(buttons)
-        )
+    buttons.append([InlineKeyboardButton("Cancel", callback_data="fwd:cancel")])
+    await message.reply_text(
+        "You have multiple bots available.\n\nWhich one would you like to use for this forward?",
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
 
 
 @Client.on_callback_query(filters.regex(r"^fwd:"))
@@ -168,7 +162,7 @@ async def forward_callback_handler(bot: Client, query):
         return await query.answer("This is an old message. Please start again with /forward.", show_alert=True)
 
     # allow title to contain ':' by limiting splits
-    parts = query.data.split(':', 3)
+    parts = query.data.split(':', 4)
     action = parts[1]
 
     if action == 'cancel':
@@ -179,8 +173,17 @@ async def forward_callback_handler(bot: Client, query):
 
     if action == 'client':
         client_type = parts[2]
+        bot_id = int(parts[3])
+        
+        if client_type == 'bot':
+            account = await db.get_bot(user_id, bot_id)
+            temp.FORWARD_CONV[user_id]['bot_account'] = account
+        else:
+            account = await db.get_userbot(user_id, bot_id)
+            temp.FORWARD_CONV[user_id]['userbot_account'] = account
+            
         temp.FORWARD_CONV[user_id]['client_type'] = client_type
-        await query.answer(f"Selected {client_type}.")
+        await query.answer(f"Selected {account.get('name', 'N/A')}.")
         await ask_for_to_channel(bot, user_id, query.message.chat.id, message=query.message)
         return
 

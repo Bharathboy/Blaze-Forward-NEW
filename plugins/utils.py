@@ -1,7 +1,3 @@
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 import time as tm
 from database import Db, db
 from .test import parse_buttons
@@ -30,11 +26,6 @@ def progress_bar_tuple(pct, width=16, empty='□', half='◧', full='■', useha
     bar = (full * full_blocks) + (half * half_blocks) + (empty * empty_blocks)
     return bar, p
 
-
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 class STS:
     def __init__(self, id):
         self.id = id
@@ -43,9 +34,9 @@ class STS:
     def verify(self):
         return self.data.get(self.id)
 
-    def store(self, From, to,  skip, limit, client_type):
+    def store(self, From, to,  skip, limit, client_type, bot_id):
         self.data[self.id] = {"FROM": From, 'TO': to, 'total_files': 0, 'skip': skip, 'limit': limit,
-                  'fetched': skip, 'filtered': 0, 'deleted': 0, 'duplicate': 0, 'total': limit, 'start': 0, 'client_type': client_type}
+                  'fetched': skip, 'filtered': 0, 'deleted': 0, 'duplicate': 0, 'total': limit, 'start': 0, 'client_type': client_type, 'bot_id': bot_id}
 
     def get(self, value=None, full=False):
         values = self.data.get(self.id)
@@ -66,14 +57,15 @@ class STS:
 
     async def get_data(self, user_id):
         client_type = self.get('client_type')
+        bot_id = self.get('bot_id')
         if client_type == 'bot':
-            bot = await db.get_bot(user_id)
+            bot = await db.get_bot(user_id, bot_id)
         elif client_type == 'userbot':
-            bot = await db.get_userbot(user_id)
+            bot = await db.get_userbot(user_id, bot_id)
         else:
-            bot = await db.get_bot(user_id)
+            bot = await db.get_bot(user_id, bot_id)
             if bot is None:
-                bot = await db.get_userbot(user_id)
+                bot = await db.get_userbot(user_id, bot_id)
         k, filters = self, await db.get_filters(user_id)
         size, configs = None, await db.get_configs(user_id)
         if configs['duplicate']:
@@ -89,7 +81,3 @@ class STS:
         button = parse_buttons(configs['button'] if configs['button'] else '')
         return bot, configs['caption'], configs['forward_tag'], {'filters': filters,
                 'keywords': configs['keywords'], 'min_size': min, 'max_size': max, 'extensions': configs['extension'], 'skip_duplicate': duplicate, 'db_uri': configs['db_uri']}, configs['protect'], button
-
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01

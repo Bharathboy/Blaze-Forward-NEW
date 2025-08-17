@@ -1,5 +1,3 @@
-
-
 from os import environ
 from dotenv import load_dotenv
 
@@ -19,7 +17,7 @@ class Config:
 
 
 class temp(object): 
-    lock = {}
+    lock = {} # Will be {user_id: [busy_bot_id1, busy_bot_id2]}
     CANCEL = {}
     forwardings = 0
     BANNED_USERS = []
