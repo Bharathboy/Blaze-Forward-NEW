@@ -4,62 +4,75 @@
 
 import re
 import asyncio
+from typing import Optional
+
 from .utils import STS
-from database import Db, db
+from database import db
 from config import temp
 from script import Script
 from pyrogram import Client, filters, enums
 from pyrogram.errors import FloodWait, MessageNotModified
 from pyrogram.errors.exceptions.not_acceptable_406 import ChannelPrivate as PrivateChat
-from pyrogram.errors.exceptions.bad_request_400 import ChannelInvalid, ChatAdminRequired, UsernameInvalid, UsernameNotModified, ChannelPrivate
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from pyrogram.errors.exceptions.bad_request_400 import (
+    ChannelInvalid, UsernameInvalid, UsernameNotModified, ChannelPrivate
+)
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-# temp dictionary to hold conversation state for each user
-if not hasattr(temp, 'FORWARD_CONV'):
-    temp.FORWARD_CONV = {}
+# ensure conversation state dict exists
+temp.FORWARD_CONV = getattr(temp, 'FORWARD_CONV', {})
 
-# --- HELPER FUNCTIONS ---
+COMMANDS = ["forward"]
 
-async def msg_edit(msg, text, reply_markup=None, wait=True):
-    """A wrapper for editing messages to handle common exceptions."""
+
+async def msg_edit(msg, text, reply_markup=None, retry=True):
+    """Safe edit: ignore 'not modified' and handle FloodWait by sleeping.
+    Returns the edited message or None on failure.
+    """
     try:
         return await msg.edit(text, reply_markup=reply_markup)
     except MessageNotModified:
-        pass
+        return None
     except FloodWait as e:
-        if wait:
+        if retry:
             await asyncio.sleep(e.value)
-            return await msg_edit(msg, text, reply_markup, wait)
+            return await msg_edit(msg, text, reply_markup, retry=False)
 
-async def send_confirmation(bot, user_id, message):
-    """Prepares and sends the final confirmation message to the user."""
-    conv_data = temp.FORWARD_CONV[user_id]
-    toid = conv_data['to_id']
-    to_title = conv_data['to_title']
-    client_type = conv_data['client_type']
-    account = conv_data['bot_account'] if client_type == 'bot' else conv_data['userbot_account']
-    fromid = conv_data['from_id']
-    last_msg_id = conv_data['last_msg_id']
-    skipno = conv_data['skipno']
 
+async def send_confirmation(bot: Client, user_id: int, message):
+    """Prepare and send final confirmation, store forwarding state in STS.
+    Pops conv state when done.
+    """
+    conv = temp.FORWARD_CONV.pop(user_id, None)
+    if not conv:
+        return await message.reply_text("Session expired. Start again with /forward.")
+
+    toid = conv['to_id']
+    to_title = conv['to_title']
+    client_type = conv['client_type']
+    account = conv['bot_account'] if client_type == 'bot' else conv['userbot_account']
+    fromid = conv['from_id']
+    last_msg_id = conv['last_msg_id']
+    skipno = conv.get('skipno', 0)
+
+    # try to get a readable source title
     try:
         title = (await bot.get_chat(fromid)).title
     except (PrivateChat, ChannelPrivate, ChannelInvalid, UsernameInvalid, UsernameNotModified):
         title = "a private chat"
     except Exception as e:
-        await message.reply(f'An error occurred while fetching chat title: {e}')
-        del temp.FORWARD_CONV[user_id]
+        await message.reply_text(f"An error occurred while fetching chat title: {e}")
         return
 
     forward_id = f"{user_id}-{message.id}"
     buttons = [
-        [InlineKeyboardButton('Yes, Start Forwarding', callback_data=f"start_public_{forward_id}")],
-        [InlineKeyboardButton('No, Cancel', callback_data="close_btn")]
+        [InlineKeyboardButton('Yes, Start Forwarding',
+                              callback_data=f"start_public_{forward_id}")],
+        [InlineKeyboardButton('No, Cancel', callback_data='close_btn')]
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
 
     await message.reply_text(
-        text=Script.DOUBLE_CHECK.format(
+        Script.DOUBLE_CHECK.format(
             botname=account.get('name', 'N/A'),
             botuname=account.get('username', 'N/A'),
             from_chat=title,
@@ -70,151 +83,164 @@ async def send_confirmation(bot, user_id, message):
         reply_markup=reply_markup
     )
 
+    # persist the forwarding config in STS
     STS(forward_id).store(fromid, toid, skipno, last_msg_id, client_type)
-    del temp.FORWARD_CONV[user_id]
 
-async def ask_for_to_channel(bot, user_id, chat_id, message=None):
-    """Asks the user to select a destination channel."""
+
+async def ask_for_to_channel(bot: Client, user_id: int, chat_id: int, message=None):
+    """Show channel choices or auto-select when only one exists."""
     channels = await db.get_user_channels(user_id)
     if not channels:
         await bot.send_message(chat_id, "Please set a 'To' channel in /settings before forwarding.")
-        if user_id in temp.FORWARD_CONV:
-            del temp.FORWARD_CONV[user_id]
+        temp.FORWARD_CONV.pop(user_id, None)
         return
 
-    conv_data = temp.FORWARD_CONV[user_id]
-    client_type = conv_data['client_type']
-    account = conv_data['bot_account'] if client_type == 'bot' else conv_data['userbot_account']
-    text = Script.TO_MSG.format(account.get('name', 'N/A'), account.get('username', 'N/A'))
+    conv = temp.FORWARD_CONV.setdefault(user_id, {})
+    client_type = conv.get('client_type')
+    account = conv.get('bot_account') if client_type == 'bot' else conv.get(
+        'userbot_account')
+    text = Script.TO_MSG.format(account.get(
+        'name', 'N/A'), account.get('username', 'N/A'))
 
     if len(channels) > 1:
-        buttons = [
-            [InlineKeyboardButton(f"{channel['title']}", callback_data=f"fwd:channel:{channel['chat_id']}:{channel['title']}")]
-            for channel in channels
-        ]
-        buttons.append([InlineKeyboardButton("Cancel", callback_data="fwd:cancel")])
-        reply_markup = InlineKeyboardMarkup(buttons)
-
+        buttons = [[InlineKeyboardButton(
+            ch['title'], callback_data=f"fwd:channel:{ch['chat_id']}:{ch['title']}")] for ch in channels]
+        buttons.append([InlineKeyboardButton(
+            "Cancel", callback_data="fwd:cancel")])
+        markup = InlineKeyboardMarkup(buttons)
         if message:
-            await msg_edit(message, text, reply_markup=reply_markup)
+            await msg_edit(message, text, reply_markup=markup)
         else:
-            await bot.send_message(chat_id, text, reply_markup=reply_markup)
+            await bot.send_message(chat_id, text, reply_markup=markup)
+        return
+
+    # only one channel -> auto-select
+    ch = channels[0]
+    conv.update({'to_id': ch['chat_id'],
+                'to_title': ch['title'], 'step': 'waiting_from'})
+    prompt_message = Script.FROM_MSG
+    if message:
+        await msg_edit(message, prompt_message)
     else:
-        # Auto-select if only one channel exists
-        channel = channels[0]
-        conv_data['to_id'] = channel['chat_id']
-        conv_data['to_title'] = channel['title']
-        conv_data['step'] = "waiting_from"
+        await bot.send_message(chat_id, prompt_message)
 
-        prompt_message = Script.FROM_MSG
-        if message:
-            await msg_edit(message, prompt_message)
-        else:
-            await bot.send_message(chat_id, prompt_message)
 
-# --- HANDLERS ---
-
-@Client.on_message(filters.private & filters.command(["forward"]) )
-async def forward_command(bot, message):
-    """Entry point for the /forward command."""
+@Client.on_message(filters.private & filters.command(COMMANDS))
+async def forward_command(bot: Client, message):
     user_id = message.from_user.id
-    if user_id in temp.FORWARD_CONV:
-        del temp.FORWARD_CONV[user_id]
+    # reset any previous session
+    temp.FORWARD_CONV.pop(user_id, None)
 
     bot_account = await db.get_bot(user_id)
     userbot_account = await db.get_userbot(user_id)
 
     if not bot_account and not userbot_account:
-        return await message.reply("<code>You didn't add any bot. Please add a bot using /settings !</code>")
+        return await message.reply_text("<code>You didn't add any bot. Please add a bot using /settings !</code>")
 
-    temp.FORWARD_CONV[user_id] = {'bot_account': bot_account, 'userbot_account': userbot_account}
+    temp.FORWARD_CONV[user_id] = {
+        'bot_account': bot_account, 'userbot_account': userbot_account}
 
     if bot_account and not userbot_account:
         temp.FORWARD_CONV[user_id]['client_type'] = 'bot'
         await ask_for_to_channel(bot, user_id, message.chat.id)
-    elif not bot_account and userbot_account:
+    elif userbot_account and not bot_account:
         temp.FORWARD_CONV[user_id]['client_type'] = 'userbot'
         await ask_for_to_channel(bot, user_id, message.chat.id)
     else:
+        # user has both -> ask which to use
         buttons = [
-            [InlineKeyboardButton(f"､Bot: {bot_account.get('name', 'N/A')}", callback_data="fwd:client:bot")],
-            [InlineKeyboardButton(f"側 Userbot: {userbot_account.get('name', 'N/A')}", callback_data="fwd:client:userbot")],
+            [InlineKeyboardButton(
+                f"Bot: {bot_account.get('name', 'N/A')}", callback_data="fwd:client:bot")],
+            [InlineKeyboardButton(
+                f"Userbot: {userbot_account.get('name', 'N/A')}", callback_data="fwd:client:userbot")],
             [InlineKeyboardButton("Cancel", callback_data="fwd:cancel")]
         ]
-        reply_markup = InlineKeyboardMarkup(buttons)
-        await message.reply(
-            "You have both a bot and a userbot configured.\n\n"
-            "**Which one would you like to use for this forward?**",
-            reply_markup=reply_markup
+        await message.reply_text(
+            "You have both a bot and a userbot configured.\n\nWhich one would you like to use for this forward?",
+            reply_markup=InlineKeyboardMarkup(buttons)
         )
 
+
 @Client.on_callback_query(filters.regex(r"^fwd:"))
-async def forward_callback_handler(bot, query):
-    """Handles all callback queries for the forward conversation."""
+async def forward_callback_handler(bot: Client, query):
     user_id = query.from_user.id
     if user_id not in temp.FORWARD_CONV:
-        return await query.answer("This is an old message. Please start the process again with /forward.", show_alert=True)
+        return await query.answer("This is an old message. Please start again with /forward.", show_alert=True)
 
-    data = query.data.split(':', 3)
-    action = data[1]
+    # allow title to contain ':' by limiting splits
+    parts = query.data.split(':', 3)
+    action = parts[1]
 
-    if action == "cancel":
-        del temp.FORWARD_CONV[user_id]
-        await query.answer("Operation cancelled.")
-        await msg_edit(query.message, "Operation cancelled.")
+    if action == 'cancel':
+        temp.FORWARD_CONV.pop(user_id, None)
+        await query.answer('Operation cancelled.')
+        await msg_edit(query.message, 'Operation cancelled.')
         return
 
-    if action == "client":
-        client_type = data[2]
+    if action == 'client':
+        client_type = parts[2]
         temp.FORWARD_CONV[user_id]['client_type'] = client_type
         await query.answer(f"Selected {client_type}.")
         await ask_for_to_channel(bot, user_id, query.message.chat.id, message=query.message)
+        return
 
-    elif action == "channel":
-        to_id = int(data[2])
-        to_title = data[3]
-        temp.FORWARD_CONV[user_id].update({'to_id': to_id, 'to_title': to_title, 'step': "waiting_from"})
+    if action == 'channel':
+        to_id = int(parts[2])
+        to_title = parts[3]
+        temp.FORWARD_CONV[user_id].update(
+            {'to_id': to_id, 'to_title': to_title, 'step': 'waiting_from'})
         await query.answer(f"Destination set to: {to_title}")
         await msg_edit(query.message, Script.FROM_MSG)
+        return
 
-    elif action == "skip":
-        choice = data[2]
-        if choice == "yes":
-            temp.FORWARD_CONV[user_id]['step'] = "waiting_skip"
-            await query.answer("Please provide the number of messages to skip.")
+    if action == 'skip':
+        choice = parts[2]
+        if choice == 'yes':
+            temp.FORWARD_CONV[user_id]['step'] = 'waiting_skip'
+            await query.answer('Please provide the number of messages to skip.')
             await msg_edit(query.message, Script.SKIP_MSG)
-        else: # "no"
+        else:
             temp.FORWARD_CONV[user_id]['skipno'] = 0
-            await query.answer("Will not skip any messages.")
-            await msg_edit(query.message, "Generating final confirmation...")
+            await query.answer('Will not skip any messages.')
+            await msg_edit(query.message, 'Generating final confirmation...')
             await send_confirmation(bot, user_id, query.message)
 
-@Client.on_message(filters.private & ~filters.command(["forward", "cancel", "help", "start", "restart", "settings"]) & filters.text)
-async def forward_message_handler(bot, message):
-    """Handles text message inputs during the forward conversation."""
+
+@Client.on_message(filters.private & filters.text, group=-1)
+async def forward_message_handler(bot: Client, message):
     user_id = message.from_user.id
-    if user_id not in temp.FORWARD_CONV or 'step' not in temp.FORWARD_CONV[user_id]:
+    conv = temp.FORWARD_CONV.get(user_id)
+    if not conv or 'step' not in conv:
         return
 
-    conv_data = temp.FORWARD_CONV[user_id]
-    step = conv_data.get('step')
-
-    if message.text.startswith('/'):
-        del temp.FORWARD_CONV[user_id]
-        await message.reply(Script.CANCEL)
+    step = conv['step']
+    try:
+        # treat slash commands as cancellation
+        if message.text.startswith('/'):
+            temp.FORWARD_CONV.pop(user_id, None)
+            return await message.reply_text(Script.CANCEL)
+    except Exception as e:
+        print(e)
         return
 
-    if step == "waiting_from":
-        if message.text and not message.forward_date:
-            regex = re.compile("(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[a-zA-Z_0-9]+)/(\d+)$")
-            match = regex.match(message.text.replace("?single", ""))
-            if not match:
-                return await message.reply('Invalid link. Please send a valid public message link.')
-            chat_id = match.group(4)
-            last_msg_id = int(match.group(5))
+    # waiting for the source message (link or forwarded message)
+    if step == 'waiting_from':
+        # link-based public message
+        if message.text and not getattr(message, 'forward_date', None):
+            regex = re.compile(
+                r"(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[A-Za-z_0-9]+)/(?P<msg>\d+)$")
+            txt = message.text.replace('?single', '')
+            m = regex.search(txt)
+            if not m:
+                return await message.reply_text('Invalid link. Please send a valid public message link.')
+
+            chat_id = m.group(4)
+            last_msg_id = int(m.group('msg'))
             if chat_id.isnumeric():
-                chat_id = int("-100" + chat_id)
-        elif message.forward_from_chat and message.forward_from_chat.type in [enums.ChatType.CHANNEL, enums.ChatType.SUPERGROUP]:
+                chat_id = int(f"-100{chat_id}")
+
+        # forwarded message from a channel/supergroup
+        elif getattr(message, 'forward_from_chat', None) and message.forward_from_chat.type in [enums.ChatType.CHANNEL, enums.ChatType.SUPERGROUP]:
             last_msg_id = message.forward_from_message_id
             chat_id = message.forward_from_chat.username or message.forward_from_chat.id
             if last_msg_id is None:
@@ -222,17 +248,19 @@ async def forward_message_handler(bot, message):
         else:
             return await message.reply_text("Invalid input. Please forward a message or send a message link.")
 
-        conv_data.update({'from_id': chat_id, 'last_msg_id': last_msg_id, 'step': 'confirm_skip'})
-        
-        buttons = [
-            [InlineKeyboardButton("Yes", callback_data="fwd:skip:yes"),
-             InlineKeyboardButton("No", callback_data="fwd:skip:no")]
-        ]
-        await message.reply("Do you want to skip any messages?", reply_markup=InlineKeyboardMarkup(buttons))
+        conv.update(
+            {'from_id': chat_id, 'last_msg_id': last_msg_id, 'step': 'confirm_skip'})
+        buttons = [[
+            InlineKeyboardButton('Yes', callback_data='fwd:skip:yes'),
+            InlineKeyboardButton('No', callback_data='fwd:skip:no')
+        ]]
+        await message.reply_text('Do you want to skip any messages?', reply_markup=InlineKeyboardMarkup(buttons))
+        return
 
-    elif step == "waiting_skip":
+    # waiting for skip number
+    if step == 'waiting_skip':
         if not message.text.isdigit():
-            return await message.reply("Invalid number. Please enter only the number of messages to skip.")
-        
-        conv_data['skipno'] = int(message.text)
+            return await message.reply_text('Invalid number. Please enter only the number of messages to skip.')
+        conv['skipno'] = int(message.text)
         await send_confirmation(bot, user_id, message)
+        return
