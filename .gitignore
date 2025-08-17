@@ -1,1 +1,15 @@
 /.env
+__pycache__/config.cpython-311.pyc
+__pycache__/database.cpython-311.pyc
+__pycache__/script.cpython-311.pyc
+plugins/__pycache__/broadcast.cpython-311.pyc
+plugins/__pycache__/commands.cpython-311.pyc
+plugins/__pycache__/db.cpython-311.pyc
+plugins/__pycache__/public.cpython-311.pyc
+plugins/__pycache__/regix.cpython-311.pyc
+plugins/__pycache__/settings.cpython-311.pyc
+plugins/__pycache__/test.cpython-311.pyc
+plugins/__pycache__/unequeify.cpython-311.pyc
+plugins/__pycache__/utils.cpython-311.pyc
+VJ-Forward-Bot.session
+.gitignore
