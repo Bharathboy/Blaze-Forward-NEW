@@ -1,8 +1,8 @@
 import os
-import sys 
+import sys
 import math
 import time, re
-import asyncio 
+import asyncio
 import logging
 import random
 from .utils import STS, progress_bar_tuple
@@ -10,9 +10,9 @@ from database import Db, db
 from .test import CLIENT, get_client, iter_messages
 from config import Config, temp
 from script import Script
-from pyrogram import Client, filters 
+from pyrogram import Client, filters
 from pyrogram.errors import FloodWait, MessageNotModified
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message 
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message
 from .db import connect_user_db
 from pyrogram.types import Message
 
@@ -29,14 +29,14 @@ def get_task_limit(user_id):
 @Client.on_callback_query(filters.regex(r'^start_public'))
 async def pub_(bot, message):
     user = message.from_user.id
-    
+
 
     if user not in temp.USER_LOCKS:
         temp.USER_LOCKS[user] = asyncio.Lock()
 
     client = None
     i = None
-    
+
 
     async with temp.USER_LOCKS[user]:
         task_limit = get_task_limit(user)
@@ -44,15 +44,15 @@ async def pub_(bot, message):
 
         if active_tasks >= task_limit:
             return await message.answer(f"You have reached your maximum limit of {task_limit} concurrent tasks. Please wait for your other tasks to complete.", show_alert=True)
-        
+
         frwd_id = message.data.split("_")[2]
         sts = STS(frwd_id)
         if not sts.verify():
             await message.answer("You are clicking on an old button.", show_alert=True)
             return await message.message.delete()
-        
+
         i = sts.get(full=True)
-        
+
         if user not in temp.lock:
             temp.lock[user] = []
         temp.lock[user].append(i.bot_id)
@@ -136,7 +136,6 @@ async def pub_(bot, message):
         await msg_edit(m, "<code>Processing...</code>")
         temp.IS_FRWD_CHAT.append(i.TO)
 
-        dup_files = set()
         try:
             MSG = []
             pling = 0
@@ -169,7 +168,7 @@ async def pub_(bot, message):
                     fname = getattr(media_obj, "file_name", None)
                     fsize = getattr(media_obj, "file_size", None)
                     fuid = getattr(media_obj, "file_unique_id", None)
-                
+
                 if media_obj and fname and await extension_filter(extensions, fname):
                     sts.add('filtered')
                     continue
@@ -179,15 +178,14 @@ async def pub_(bot, message):
                 elif media_obj and fsize is not None and await size_filter(max_size, min_size, fsize):
                     sts.add('filtered')
                     continue
-                elif media_obj and fuid and fuid in dup_files:
-                    sts.add('duplicate')
-                    continue
 
-                if media_obj and datas['skip_duplicate']:
-                    if fuid:
-                        dup_files.add(fuid)
-                        if user_have_db:
-                            await user_db.add_file(fuid)
+                if user_have_db and datas['skip_duplicate'] and fuid:
+                    if await user_db.is_file_exit(fuid):
+                        sts.add('duplicate')
+                        continue
+
+                if user_have_db and datas['skip_duplicate'] and fuid:
+                    await user_db.add_file(fuid)
 
                 if forward_tag:
                     MSG.append(message.id)
@@ -214,7 +212,7 @@ async def pub_(bot, message):
                 temp.IS_FRWD_CHAT.remove(sts.TO)
             await stop(client, user, i.bot_id)
             return
-        
+
         if sts.TO in temp.IS_FRWD_CHAT:
             temp.IS_FRWD_CHAT.remove(sts.TO)
         await send(client, user, "<b>🎉 ғᴏʀᴡᴀᴅɪɴɢ ᴄᴏᴍᴘʟᴇᴛᴇᴅ</b>")
@@ -229,10 +227,10 @@ async def pub_(bot, message):
         if i: # Ensure 'i' was defined before the error
             await stop(client, user, i.bot_id)
         await message.answer("An unexpected error occurred and the task was cancelled.", show_alert=True)
-        
+
 
 async def copy(user, bot, msg, m, sts, bot_info, from_chat, to_chat):
-   try:                               
+   try:
      if msg.get("media") and msg.get("caption"):
         await bot.send_cached_media(
               chat_id=sts.get('TO'),
@@ -243,7 +241,7 @@ async def copy(user, bot, msg, m, sts, bot_info, from_chat, to_chat):
      else:
         await bot.copy_message(
               chat_id=sts.get('TO'),
-              from_chat_id=sts.get('FROM'),    
+              from_chat_id=sts.get('FROM'),
               caption=msg.get("caption"),
               message_id=msg.get("msg_id"),
               reply_markup=msg.get('button'),
@@ -258,10 +256,10 @@ async def copy(user, bot, msg, m, sts, bot_info, from_chat, to_chat):
      sts.add('deleted')
 
 async def forward(user, bot, msg, m, sts, protect, bot_info, from_chat, to_chat):
-   try:                             
+   try:
      await bot.forward_messages(
            chat_id=sts.get('TO'),
-           from_chat_id=sts.get('FROM'), 
+           from_chat_id=sts.get('FROM'),
            protect_content=protect,
            message_ids=msg)
    except FloodWait as e:
@@ -289,7 +287,7 @@ async def msg_edit(msg, text, button=None, wait=None):
     try:
         return await msg.edit(text, reply_markup=button)
     except MessageNotModified:
-        pass 
+        pass
     except FloodWait as e:
         if wait:
            await asyncio.sleep(e.value)
@@ -336,15 +334,15 @@ async def is_cancelled(client, user, msg, sts, bot_id, bot_info, from_chat, to_c
       await edit(user, msg, 'ᴄᴀɴᴄᴇʟʟᴇᴅ', "ᴄᴀɴᴄᴇʟʟᴇᴅ", sts, bot_info, from_chat, to_chat)
       await send(client, user, Script.FORWARD_CANCEL_TXT.format(bot_info['name'], bot_info['id'], from_chat.title, to_chat.title))
       await stop(client, user, bot_id)
-      return True 
-   return False 
+      return True
+   return False
 
 async def stop(client, user, bot_id):
    try:
      if client:
         await client.stop()
    except:
-     pass 
+     pass
    await db.rmve_frwd(user, bot_id)
    temp.forwardings -= 1
    if user in temp.lock and bot_id in temp.lock[user]:
@@ -379,7 +377,7 @@ def get_size(size):
   while size >= 1024.0 and i < len(units):
      i += 1
      size /= 1024.0
-  return "%.2f %s" % (size, units[i]) 
+  return "%.2f %s" % (size, units[i])
 
 async def keyword_filter(keywords, file_name):
     if keywords is None:
@@ -415,7 +413,7 @@ def media(msg):
      media = getattr(msg, msg.media.value, None)
      if media:
         return getattr(media, 'file_id', None)
-  return None 
+  return None
 
 def TimeFormatter(milliseconds: int) -> str:
     seconds, milliseconds = divmod(int(milliseconds), 1000)
@@ -434,7 +432,7 @@ def retry_btn(id):
 
 @Client.on_callback_query(filters.regex(r'^terminate_frwd_'))
 async def terminate_frwding(bot, m):
-    user_id = m.from_user.id 
+    user_id = m.from_user.id
     bot_id = int(m.data.split('_')[2])
     if user_id not in temp.CANCEL:
         temp.CANCEL[user_id] = {}
@@ -449,7 +447,7 @@ async def status_msg(bot, msg):
        fetched, forwarded, remaining = 0, 0, 0
     else:
        fetched, limit, forwarded = sts.get('fetched'), sts.get('limit'), sts.get('total_files')
-       remaining = limit - fetched 
+       remaining = limit - fetched
     start_time = sts.get('start')
     uptime = await get_bot_uptime(start_time)
     total = sts.get('limit') - sts.get('fetched')
@@ -470,7 +468,7 @@ async def stop_forward(client, message):
     buttons = []
     for bot_id in temp.lock.get(user_id, []):
         buttons.append([InlineKeyboardButton(f"Bot ID: {bot_id}", callback_data=f"stop_task_{bot_id}")])
-    
+
     if not buttons:
         return await message.reply('**No Ongoing Forwards To Cancel**')
 
@@ -502,7 +500,7 @@ async def restart_pending_forwads(bot, user):
            return
        if not sts.verify():
           temp.forwardings -=1
-          return 
+          return
        sts.add('fetched', value=fetch)
        sts.add('duplicate', value=settings['duplicate'])
        sts.add('filtered', value=settings['filtered'])
@@ -541,7 +539,7 @@ async def restart_pending_forwads(bot, user):
           il = True if _bot['is_bot'] == True else False
           client = await get_client(data, is_bot=il)
           await client.start()
-       except Exception as e:  
+       except Exception as e:
           await m.edit(e)
           return
        try:
@@ -549,7 +547,7 @@ async def restart_pending_forwads(bot, user):
        except:
           await db.rmve_frwd(user_id, bot_id)
           return
-       try: 
+       try:
           from_chat = await client.get_chat(sts.get("FROM"))
           to_chat = await client.get_chat(sts.get("TO"))
        except Exception as e:
@@ -581,17 +579,11 @@ async def restart_pending_forwads(bot, user):
     sts.add(time=True, start_time=start)
     sleep = 1 if _bot['is_bot'] else 10
     temp.IS_FRWD_CHAT.append(i.TO)
-    
+
     if user_id not in temp.lock:
         temp.lock[user_id] = []
     temp.lock[user_id].append(bot_id)
-    
-    dup_files = set()
-    if user_have_db and datas['skip_duplicate']:
-        old_files = await user_db.get_all_files()
-        async for ofile in old_files:
-            dup_files.add(ofile["file_id"])
-    
+
     try:
       MSG = []
       pling=0
@@ -602,11 +594,11 @@ async def restart_pending_forwads(bot, user):
                    await user_db.drop_all()
                    await user_db.close()
                 return
-            if pling %20 == 0: 
+            if pling %20 == 0:
                await edit(user_id, m, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, _bot, from_chat, to_chat)
             pling += 1
             sts.add('fetched')
-            
+
             if isinstance(message, str):
                 if message == "DUPLICATE":
                     sts.add("duplicate")
@@ -626,31 +618,31 @@ async def restart_pending_forwads(bot, user):
                 fsize = getattr(media_obj, "file_size", None)
                 fuid = getattr(media_obj, "file_unique_id", None)
             else:
-                media_obj = fname = fsize = fuid = None            
+                media_obj = fname = fsize = fuid = None
             if media_obj and fname and await extension_filter(extensions, fname):
                sts.add('filtered')
-               continue 
+               continue
             elif media_obj and fname and await keyword_filter(keywords, fname):
                sts.add('filtered')
-               continue 
+               continue
             elif media_obj and fsize is not None and await size_filter(max_size, min_size, fsize):
                sts.add('filtered')
-               continue 
-            elif media_obj and fuid and fuid in dup_files:
-               sts.add('duplicate')
                continue
-           
-            if media_obj and datas['skip_duplicate']:
-                if fuid:
-                    dup_files.add(fuid)
-                    if user_have_db:
-                        await user_db.add_file(fuid)
+            
+            if user_have_db and datas['skip_duplicate'] and fuid:
+                if await user_db.is_file_exit(fuid):
+                    sts.add('duplicate')
+                    continue
+
+            if user_have_db and datas['skip_duplicate'] and fuid:
+                await user_db.add_file(fuid)
+
             if forward_tag:
                MSG.append(message.id)
                notcompleted = len(MSG)
                completed = sts.get('total') - sts.get('fetched')
-               if ( notcompleted >= 100 
-                    or completed <= 100): 
+               if ( notcompleted >= 100
+                    or completed <= 100):
                   await forward(user_id, client, MSG, m, sts, protect, _bot, from_chat, to_chat)
                   sts.add('total_files', notcompleted)
                   await asyncio.sleep(10)
@@ -660,7 +652,7 @@ async def restart_pending_forwads(bot, user):
                details = {"msg_id": message.id, "media": media(message), "caption": new_caption, 'button': button, "protect": protect}
                await copy(user_id, client, details, m, sts, _bot, from_chat, to_chat)
                sts.add('total_files')
-               await asyncio.sleep(sleep) 
+               await asyncio.sleep(sleep)
     except Exception as e:
         await bot.send_message(user_id, f'<b>ERROR:</b>\n<code>{e}</code>')
         if user_have_db:
@@ -670,14 +662,14 @@ async def restart_pending_forwads(bot, user):
             temp.IS_FRWD_CHAT.remove(sts.TO)
         await stop(client, user_id, bot_id)
         return
-        
+
     if sts.TO in temp.IS_FRWD_CHAT:
         temp.IS_FRWD_CHAT.remove(sts.TO)
     await send(client, user_id, "<b>🎉 ғᴏʀᴡᴀᴅɪɴɢ ᴄᴏᴍᴘʟᴇᴛᴇᴅ</b>")
     if user_have_db:
         await user_db.drop_all()
         await user_db.close()
-    await edit(user_id, m, 'ᴄᴏᴍᴘʟᴇᴛᴇᴅ', "ᴄᴏᴍᴘʟᴇᴛᴇᴅ", sts, _bot, from_chat, to_chat) 
+    await edit(user_id, m, 'ᴄᴏᴍᴘʟᴇᴛᴇᴅ', "ᴄᴏᴍᴘʟᴇᴛᴇᴅ", sts, _bot, from_chat, to_chat)
     await stop(client, user_id, bot_id)
 
 async def store_vars(user_id, bot_id):
@@ -735,7 +727,7 @@ async def get_bot_uptime(start_time):
     if uptime_minutes != 0:
         uptime_string += f"{uptime_minutes % 60}m, "
     uptime_string += f"{uptime_seconds % 60}s"
-    return uptime_string  
+    return uptime_string
 
 async def complete_time(total_files, files_per_minute=30):
     if total_files == 0: return "0s"
