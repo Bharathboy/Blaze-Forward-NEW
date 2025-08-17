@@ -13,6 +13,12 @@ class Config:
     BOT_SESSION = environ.get("BOT_SESSION", "Auto_Forward")
     DATABASE_URI = environ.get("DATABASE_URI", "")
     DATABASE_NAME = environ.get("DATABASE_NAME", "")
+    PREMIUM_USERS = {
+    123456789: "gold",
+    987654321: "silver",
+    654321098: "bronze"
+    }
+
 
 
 
