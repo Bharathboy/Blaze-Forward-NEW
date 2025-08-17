@@ -24,7 +24,6 @@ TEXT = Script.TEXT
 @Client.on_callback_query(filters.regex(r'^start_public'))
 async def pub_(bot, message):
     user = message.from_user.id
-    temp.CANCEL[user] = False
     frwd_id = message.data.split("_")[2]
     
     sts = STS(frwd_id)
@@ -33,6 +32,10 @@ async def pub_(bot, message):
       return await message.message.delete()
       
     i = sts.get(full=True)
+    if user not in temp.CANCEL:
+        temp.CANCEL[user] = {}
+    temp.CANCEL[user][i.bot_id] = False
+
     if i.bot_id in temp.lock.get(user, []):
         return await message.answer("This bot is currently busy. Please choose another bot.", show_alert=True)
 
@@ -284,19 +287,19 @@ async def edit(user, msg, title, status, sts):
         if status in ["ᴄᴀɴᴄᴇʟʟᴇᴅ", "ᴄᴏᴍᴘʟᴇᴛᴇᴅ"]:
            button.append([InlineKeyboardButton('• ᴄᴏᴍᴘʟᴇᴛᴇᴅ ​•', url='https://t.me/VJ_BOTZ')])
         else:
-           button.append([InlineKeyboardButton('• ᴄᴀɴᴄᴇʟ', 'terminate_frwd')])
+           button.append([InlineKeyboardButton('• ᴄᴀɴᴄᴇʟ', f'terminate_frwd_{i.bot_id}')])
         await msg_edit(msg, text, InlineKeyboardMarkup(button))
     except Exception as e:
         logging.error(e)
 
 async def is_cancelled(client, user, msg, sts, bot_id):
-   if temp.CANCEL.get(user)==True:
+   if temp.CANCEL.get(user, {}).get(bot_id):
       if sts.TO in temp.IS_FRWD_CHAT:
          temp.IS_FRWD_CHAT.remove(sts.TO)
       await edit(user, msg, 'ᴄᴀɴᴄᴇʟʟᴇᴅ', "ᴄᴀɴᴄᴇʟʟᴇᴅ", sts)
       await send(client, user, "<b>❌ ғᴏʀᴡᴀᴅɪɴɢ ᴄᴀɴᴄᴇʟʟᴇᴅ</b>")
       await stop(client, user, bot_id)
-      return True 
+      return True
    return False 
 
 async def stop(client, user, bot_id):
@@ -390,10 +393,13 @@ def TimeFormatter(milliseconds: int) -> str:
 def retry_btn(id):
     return InlineKeyboardMarkup([[InlineKeyboardButton('♻️ RETRY ♻️', f"start_public_{id}")]])
 
-@Client.on_callback_query(filters.regex(r'^terminate_frwd$'))
+@Client.on_callback_query(filters.regex(r'^terminate_frwd_'))
 async def terminate_frwding(bot, m):
-    user_id = m.from_user.id
-    temp.CANCEL[user_id] = True 
+    user_id = m.from_user.id 
+    bot_id = int(m.data.split('_')[2])
+    if user_id not in temp.CANCEL:
+        temp.CANCEL[user_id] = {}
+    temp.CANCEL[user_id][bot_id] = True
     await m.answer("Forwarding ᴄᴀɴᴄᴇʟʟᴇᴅ !", show_alert=True)
 
 @Client.on_callback_query(filters.regex(r'^fwrdstatus'))
@@ -419,15 +425,27 @@ async def close(bot, update):
 @Client.on_message(filters.private & filters.command(['stop']))
 async def stop_forward(client, message):
     user_id = message.from_user.id
-    sts = await message.reply('<code>Stoping...</code>')
-    await asyncio.sleep(0.5)
-    if not await db.is_forwad_exit(message.from_user.id):
-        return await sts.edit('**No Ongoing Forwards To Cancel**')
-    temp.CANCEL[user_id] = True
-    mst = await db.get_forward_details(user_id)
-    msg = await client.get_messages(user_id, mst['msg_id'])
-    link = f"tg://openmessage?user_id={6648261085}&message_id={mst['msg_id']}"
-    await sts.edit(f"<b>Successfully Canceled </b>", disable_web_page_preview=True)
+    if not await db.is_forwad_exit(user_id):
+        return await message.reply('**No Ongoing Forwards To Cancel**')
+
+    buttons = []
+    for bot_id in temp.lock.get(user_id, []):
+        buttons.append([InlineKeyboardButton(f"Bot ID: {bot_id}", callback_data=f"stop_task_{bot_id}")])
+    
+    if not buttons:
+        return await message.reply('**No Ongoing Forwards To Cancel**')
+
+    await message.reply("Which forwarding task would you like to stop?", reply_markup=InlineKeyboardMarkup(buttons))
+
+
+@Client.on_callback_query(filters.regex(r'^stop_task_'))
+async def stop_task_callback(bot, query):
+    user_id = query.from_user.id
+    bot_id = int(query.data.split('_')[2])
+    if user_id not in temp.CANCEL:
+        temp.CANCEL[user_id] = {}
+    temp.CANCEL[user_id][bot_id] = True
+    await query.message.edit(f"<b>Successfully Canceled Task for Bot ID: {bot_id}</b>")
 
 async def restart_pending_forwads(bot, user):
     user_id = user['user_id']
