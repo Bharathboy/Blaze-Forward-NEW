@@ -21,8 +21,8 @@ COMMANDS = ["forward"]
 
 
 async def msg_edit(msg, text, reply_markup=None, retry=True):
-    """Safe edit: ignore 'not modified' and handle FloodWait by sleeping.
-    Returns the edited message or None on failure.
+    """sᴀꜰᴇ ᴇᴅɪᴛ: ɪɢɴᴏʀᴇ 'ɴᴏᴛ ᴍᴏᴅɪꜰɪᴇᴅ' ᴀɴᴅ ʜᴀɴᴅʟᴇ ꜰʟᴏᴏᴅᴡᴀɪᴛ ʙʏ sʟᴇᴇᴘɪɴɢ.
+    ʀᴇᴛᴜʀɴs ᴛʜᴇ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ ᴏʀ Nᴏɴᴇ ᴏɴ ꜰᴀɪʟᴜʀᴇ.
     """
     try:
         return await msg.edit(text, reply_markup=reply_markup)
@@ -35,12 +35,12 @@ async def msg_edit(msg, text, reply_markup=None, retry=True):
 
 
 async def send_confirmation(bot: Client, user_id: int, message):
-    """Prepare and send final confirmation, store forwarding state in STS.
-    Pops conv state when done.
+    """ᴘʀᴇᴘᴀʀᴇ ᴀɴᴅ sᴇɴᴅ ғɪɴᴀʟ ᴄᴏɴꜰɪʀᴍᴀᴛɪᴏɴ, sᴛᴏʀᴇ ғᴏʀᴡᴀʀᴅɪɴɢ sᴛᴀᴛᴇ ɪɴ Sᴛs.
+    ᴘᴏᴘs ᴄᴏɴᴠ sᴛᴀᴛᴇ ᴡʜᴇɴ ᴅᴏɴᴇ.
     """
     conv = temp.FORWARD_CONV.pop(user_id, None)
     if not conv:
-        return await message.reply_text("Session expired. Start again with /forward.")
+        return await message.reply_text("sᴇssɪᴏɴ ᴇxᴘɪʀᴇᴅ. sᴛᴀʀᴛ ᴀɢᴀɪɴ ᴡɪᴛʜ /forward.")
 
     toid = conv['to_id']
     to_title = conv['to_title']
@@ -54,16 +54,16 @@ async def send_confirmation(bot: Client, user_id: int, message):
     try:
         title = (await bot.get_chat(fromid)).title
     except (PrivateChat, ChannelPrivate, ChannelInvalid, UsernameInvalid, UsernameNotModified):
-        title = "a private chat"
+        title = "ᴀ ᴘʀɪᴠᴀᴛᴇ ᴄʜᴀᴛ"
     except Exception as e:
-        await message.reply_text(f"An error occurred while fetching chat title: {e}")
+        await message.reply_text(f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ ᴡʜɪʟᴇ ꜰᴇᴛᴄʜɪɴɢ ᴄʜᴀᴛ ᴛɪᴛʟᴇ: {e}")
         return
 
     forward_id = f"{user_id}-{message.id}"
     buttons = [
-        [InlineKeyboardButton('Yes, Start Forwarding',
+        [InlineKeyboardButton('ʏᴇs, sᴛᴀʀᴛ ꜰᴏʀᴡᴀʀᴅɪɴɢ',
                               callback_data=f"start_public_{forward_id}")],
-        [InlineKeyboardButton('No, Cancel', callback_data='close_btn')]
+        [InlineKeyboardButton('ɴᴏ, ᴄᴀɴᴄᴇʟ', callback_data='close_btn')]
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
 
@@ -84,10 +84,10 @@ async def send_confirmation(bot: Client, user_id: int, message):
 
 
 async def ask_for_to_channel(bot: Client, user_id: int, chat_id: int, message=None):
-    """Show channel choices or auto-select when only one exists."""
+    """sʜᴏᴡ ᴄʜᴀɴɴᴇʟ ᴄʜᴏɪᴄᴇs ᴏʀ ᴀᴜᴛᴏ-sᴇʟᴇᴄᴛ ᴡʜᴇɴ ᴏɴʟʏ ᴏɴᴇ ᴇxɪsᴛs."""
     channels = await db.get_user_channels(user_id)
     if not channels:
-        await bot.send_message(chat_id, "Please set a 'To' channel in /settings before forwarding.")
+        await bot.send_message(chat_id, "ᴘʟᴇᴀsᴇ sᴇᴛ ᴀ 'To' ᴄʜᴀɴɴᴇʟ ɪɴ /settings ʙᴇꜰᴏʀᴇ ꜰᴏʀᴡᴀʀᴅɪɴɢ.")
         temp.FORWARD_CONV.pop(user_id, None)
         return
 
@@ -102,7 +102,7 @@ async def ask_for_to_channel(bot: Client, user_id: int, chat_id: int, message=No
         buttons = [[InlineKeyboardButton(
             ch['title'], callback_data=f"fwd:channel:{ch['chat_id']}:{ch['title']}")] for ch in channels]
         buttons.append([InlineKeyboardButton(
-            "Cancel", callback_data="fwd:cancel")])
+            "ᴄᴀɴᴄᴇʟ", callback_data="fwd:cancel")])
         markup = InlineKeyboardMarkup(buttons)
         if message:
             await msg_edit(message, text, reply_markup=markup)
@@ -133,7 +133,9 @@ async def forward_command(bot: Client, message):
     active_tasks = len(temp.lock.get(user_id, []))
 
     if active_tasks >= task_limit:
-        return await message.reply_text(f"You have reached your maximum limit of {task_limit} concurrent tasks. Please wait for your other tasks to complete.")
+        return await message.reply_text(
+            f"ʏᴏᴜ ʜᴀᴠᴇ ʀᴇᴀᴄʜᴇᴅ ʏᴏᴜʀ ᴍᴀxɪᴍᴜᴍ ʟɪᴍɪᴛ ᴏꜰ {task_limit} ᴄᴏɴᴄᴜʀʀᴇɴᴛ ᴛᴀsᴋs. ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ꜰᴏʀ ʏᴏᴜʀ ᴏᴛʜᴇʀ ᴛᴀsᴋs ᴛᴏ ᴄᴏᴍᴘʟᴇᴛᴇ."
+        )
 
     # reset any previous session
     temp.FORWARD_CONV.pop(user_id, None)
@@ -142,7 +144,7 @@ async def forward_command(bot: Client, message):
     userbots = await db.get_userbots(user_id)
     
     if not bots and not userbots:
-        return await message.reply_text("<code>You didn't add any bot. Please add a bot using /settings !</code>")
+        return await message.reply_text("<code>ʏᴏᴜ ᴅɪᴅɴ'ᴛ ᴀᴅᴅ ᴀɴʏ ʙᴏᴛ. ᴘʟᴇᴀsᴇ ᴀᴅᴅ ᴀ ʙᴏᴛ ᴜsɪɴɢ /settings !</code>")
 
     temp.FORWARD_CONV[user_id] = {}
     
@@ -157,11 +159,11 @@ async def forward_command(bot: Client, message):
                 f"👤USERBOT: {usr_bot.get('name', 'N/A')}", callback_data=f"fwd:client:userbot:{usr_bot['id']}")])
     
     if not buttons:
-        return await message.reply_text("All your bots are currently busy. Please wait for a job to complete.")
+        return await message.reply_text("ᴀʟʟ ʏᴏᴜʀ ʙᴏᴛs ᴀʀᴇ ᴄᴜʀʀᴇɴᴛʟʏ ʙᴜsʏ. ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ꜰᴏʀ ᴀ ᴊᴏʙ ᴛᴏ ᴄᴏᴍᴘʟᴇᴛᴇ.")
 
-    buttons.append([InlineKeyboardButton("Cancel", callback_data="fwd:cancel")])
+    buttons.append([InlineKeyboardButton("ᴄᴀɴᴄᴇʟ", callback_data="fwd:cancel")])
     await message.reply_text(
-        "You have multiple bots available.\n\nWhich one would you like to use for this forward?",
+        "ʏᴏᴜ ʜᴀᴠᴇ ᴍᴜʟᴛɪᴘʟᴇ ʙᴏᴛs ᴀᴠᴀɪʟᴀʙʟᴇ.\n\nᴡʜɪᴄʜ ᴏɴᴇ ᴡᴏᴜʟᴅ ʏᴏᴜ ʟɪᴋᴇ ᴛᴏ ᴜsᴇ ғᴏʀ ᴛʜɪs ғᴏʀᴡᴀʀᴅ?",
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
@@ -170,7 +172,7 @@ async def forward_command(bot: Client, message):
 async def forward_callback_handler(bot: Client, query):
     user_id = query.from_user.id
     if user_id not in temp.FORWARD_CONV:
-        return await query.answer("This is an old message. Please start again with /forward.", show_alert=True)
+        return await query.answer("ᴛʜɪs ɪs ᴀɴ ᴏʟᴅ ᴍᴇssᴀɢᴇ. ᴘʟᴇᴀsᴇ sᴛᴀʀᴛ ᴀɢᴀɪɴ ᴡɪᴛʜ /forward.", show_alert=True)
 
     # allow title to contain ':' by limiting splits
     parts = query.data.split(':', 4)
@@ -178,8 +180,8 @@ async def forward_callback_handler(bot: Client, query):
 
     if action == 'cancel':
         temp.FORWARD_CONV.pop(user_id, None)
-        await query.answer('Operation cancelled.')
-        await msg_edit(query.message, 'Operation cancelled.')
+        await query.answer('ᴏᴘᴇʀᴀᴛɪᴏɴ ᴄᴀɴᴄᴇʟʟᴇᴅ.')
+        await msg_edit(query.message, 'ᴏᴘᴇʀᴀᴛɪᴏɴ ᴄᴀɴᴄᴇʟʟᴇᴅ.')
         return
 
     if action == 'client':
@@ -194,7 +196,7 @@ async def forward_callback_handler(bot: Client, query):
             temp.FORWARD_CONV[user_id]['userbot_account'] = account
             
         temp.FORWARD_CONV[user_id]['client_type'] = client_type
-        await query.answer(f"Selected {account.get('name', 'N/A')}.")
+        await query.answer(f"sᴇʟᴇᴄᴛᴇᴅ {account.get('name', 'N/A')}.")
         await ask_for_to_channel(bot, user_id, query.message.chat.id, message=query.message)
         return
 
@@ -203,7 +205,7 @@ async def forward_callback_handler(bot: Client, query):
         to_title = parts[3]
         temp.FORWARD_CONV[user_id].update(
             {'to_id': to_id, 'to_title': to_title, 'step': 'waiting_from'})
-        await query.answer(f"Destination set to: {to_title}")
+        await query.answer(f"ᴅᴇsᴛɪɴᴀᴛɪᴏɴ sᴇᴛ ᴛᴏ: {to_title}")
         await msg_edit(query.message, Script.FROM_MSG)
         return
 
@@ -211,13 +213,15 @@ async def forward_callback_handler(bot: Client, query):
         choice = parts[2]
         if choice == 'yes':
             temp.FORWARD_CONV[user_id]['step'] = 'waiting_skip'
-            await query.answer('Please provide the number of messages to skip.')
+            await query.answer('ᴘʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴛʜᴇ ɴᴜᴍʙᴇʀ ᴏғ ᴍᴇssᴀɢᴇs ᴛᴏ sᴋɪᴘ.')
             await msg_edit(query.message, Script.SKIP_MSG)
         else:
             temp.FORWARD_CONV[user_id]['skipno'] = 0
-            await query.answer('Will not skip any messages.')
-            await msg_edit(query.message, 'Generating final confirmation...')
+            await query.answer('ᴡɪʟʟ ɴᴏᴛ sᴋɪᴘ ᴀɴʏ ᴍᴇssᴀɢᴇs.')
+            x = await msg_edit(query.message, 'ɢᴇɴᴇʀᴀᴛɪɴɢ ꜰɪɴᴀʟ ᴄᴏɴꜰɪʀᴍᴀᴛɪᴏɴ...')
             await send_confirmation(bot, user_id, query.message)
+            await x.delete()
+
 
 
 @Client.on_message(filters.private & filters.text, group=-1)
@@ -246,7 +250,8 @@ async def forward_message_handler(bot: Client, message):
             txt = message.text.replace('?single', '')
             m = regex.search(txt)
             if not m:
-                return await message.reply_text('Invalid link. Please send a valid public message link.')
+                x = await message.reply_text('ɪɴᴠᴀʟɪᴅ ʟɪɴᴋ. ᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ᴠᴀʟɪᴅ ᴘᴜʙʟɪᴄ ᴍᴇssᴀɢᴇ ʟɪɴᴋ.')
+                return
 
             chat_id = m.group(4)
             last_msg_id = int(m.group('msg'))
@@ -258,23 +263,25 @@ async def forward_message_handler(bot: Client, message):
             last_msg_id = message.forward_from_message_id
             chat_id = message.forward_from_chat.username or message.forward_from_chat.id
             if last_msg_id is None:
-                return await message.reply_text("This looks like a message from an anonymous admin. Please provide the last message link from the channel instead.")
+                return await message.reply_text("ᴛʜɪs ʟᴏᴏᴋs ʟɪᴋᴇ ᴀ ᴍᴇssᴀɢᴇ ғʀᴏᴍ ᴀɴ ᴀɴᴏɴʏᴍᴏᴜs ᴀᴅᴍɪɴ. ᴘʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴛʜᴇ ʟᴀsᴛ ᴍᴇssᴀɢᴇ ʟɪɴᴋ ғʀᴏᴍ ᴛʜᴇ ᴄʜᴀɴɴᴇʟ ɪɴsᴛᴇᴀᴅ.")
         else:
-            return await message.reply_text("Invalid input. Please forward a message or send a message link.")
+            return await message.reply_text("ɪɴᴠᴀʟɪᴅ ɪɴᴘᴜᴛ. ᴘʟᴇᴀsᴇ ғᴏʀᴡᴀʀᴅ ᴀ ᴍᴇssᴀɢᴇ ᴏʀ sᴇɴᴅ ᴀ ᴍᴇssᴀɢᴇ ʟɪɴᴋ.")
 
         conv.update(
             {'from_id': chat_id, 'last_msg_id': last_msg_id, 'step': 'confirm_skip'})
         buttons = [[
-            InlineKeyboardButton('Yes', callback_data='fwd:skip:yes'),
-            InlineKeyboardButton('No', callback_data='fwd:skip:no')
+            InlineKeyboardButton('ʏᴇs', callback_data='fwd:skip:yes'),
+            InlineKeyboardButton('ɴᴏ', callback_data='fwd:skip:no')
         ]]
-        await message.reply_text('Do you want to skip any messages?', reply_markup=InlineKeyboardMarkup(buttons))
+        await message.reply_text('ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ sᴋɪᴘ ᴀɴʏ ᴍᴇssᴀɢᴇs?', reply_markup=InlineKeyboardMarkup(buttons))
         return
 
     # waiting for skip number
     if step == 'waiting_skip':
         if not message.text.isdigit():
-            return await message.reply_text('Invalid number. Please enter only the number of messages to skip.')
+            x=await message.reply_text('ɪɴᴠᴀʟɪᴅ ɴᴜᴍʙᴇʀ. ᴘʟᴇᴀsᴇ ᴇɴᴛᴇʀ ᴏɴʟʏ ᴛʜᴇ ɴᴜᴍʙᴇʀ ᴏꜰ ᴍᴇssᴀɢᴇs ᴛᴏ sᴋɪᴘ.')
+            return
+        
         conv['skipno'] = int(message.text)
         await send_confirmation(bot, user_id, message)
         return

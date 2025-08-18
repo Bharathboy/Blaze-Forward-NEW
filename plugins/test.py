@@ -95,8 +95,8 @@ class CLIENT:
         await bot.send_message(user_id, text=disclaimer_text)
 
         prompt = (
-            "➫ ᴘʟᴇᴀsᴇ sᴇɴᴅ ʏᴏᴜʀ ᴘʜᴏɴᴇ ɴᴜᴍʙᴇʀ ᴡɪᴛʜ ᴄᴏᴜɴᴛʀʏ ᴄᴏᴅᴇ.\n"
-            "➫ ᴇxᴀᴍᴘʟᴇ: +910000000000\n/cancel - ᴛᴏ ᴄᴀɴᴄᴇʟ ᴛʜɪs ᴘʀᴏᴄᴇss"
+            "ᴘʟᴇᴀsᴇ sᴇɴᴅ ʏᴏᴜʀ ᴘʜᴏɴᴇ ɴᴜᴍʙᴇʀ ᴡɪᴛʜ ᴄᴏᴜɴᴛʀʏ ᴄᴏᴅᴇ.\n"
+            "ᴇxᴀᴍᴘʟᴇ: +910000000000\n/cancel - ᴛᴏ ᴄᴀɴᴄᴇʟ ᴛʜɪs ᴘʀᴏᴄᴇss"
         )
         phone_number_msg = await bot.ask(user_id, prompt, filters=filters.text)
         if phone_number_msg.text and phone_number_msg.text.startswith("/"):
@@ -225,7 +225,7 @@ class CLIENT:
         )
         await bot.send_message(user_id, text=disclaimer)
 
-        msg = await bot.ask(chat_id=user_id, text="<b>send your pyrogram session.\nget it from @mdsessiongenbot\n\n/cancel - cancel the process</b>")
+        msg = await bot.ask(chat_id=user_id, text="<b>send your pyrogram session.\nget it from login bot option\n\n/cancel - cancel the process</b>")
         if msg.text == "/cancel":
             return await msg.reply("<b>process cancelled !</b>")
         session_str = msg.text.strip()

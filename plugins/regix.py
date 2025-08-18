@@ -43,12 +43,12 @@ async def pub_(bot, message):
         active_tasks = len(temp.lock.get(user, []))
 
         if active_tasks >= task_limit:
-            return await message.answer(f"You have reached your maximum limit of {task_limit} concurrent tasks. Please wait for your other tasks to complete.", show_alert=True)
+            return await message.answer(f"ʏᴏᴜ ʜᴀᴠᴇ ʀᴇᴀᴄʜᴇᴅ ʏᴏᴜʀ ᴍᴀxɪᴍᴜᴍ ʟɪᴍɪᴛ ᴏꜰ {task_limit} ᴄᴏɴᴄᴜʀʀᴇɴᴛ ᴛᴀsᴋs. ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ꜰᴏʀ ʏᴏᴜʀ ᴏᴛʜᴇʀ ᴛᴀsᴋs ᴛᴏ ᴄᴏᴍᴘʟᴇᴛᴇ.", show_alert=True)
 
         frwd_id = message.data.split("_")[2]
         sts = STS(frwd_id)
         if not sts.verify():
-            await message.answer("You are clicking on an old button.", show_alert=True)
+            await message.answer("ʏᴏᴜ ᴀʀᴇ ᴄʟɪᴄᴋɪɴɢ ᴏɴ ᴀɴ ᴏʟᴅ ʙᴜᴛᴛᴏɴ.", show_alert=True)
             return await message.message.delete()
 
         i = sts.get(full=True)
@@ -63,11 +63,11 @@ async def pub_(bot, message):
         temp.CANCEL[user][i.bot_id] = False
 
         if i.TO in temp.IS_FRWD_CHAT:
-            await message.answer("A task is already in progress for the target chat. Please wait.", show_alert=True)
+            await message.answer("ᴀ ᴛᴀsᴋ ɪs ᴀʟʀᴇᴀᴅʏ ɪɴ ᴘʀᴏɢʀᴇss ғᴏʀ ᴛʜᴇ ᴛᴀʀɢᴇᴛ ᴄʜᴀᴛ. ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ.", show_alert=True)
             await stop(client, user, i.bot_id)
             return
 
-        m = await msg_edit(message.message, "<code>Verifying your data, please wait...</code>")
+        m = await msg_edit(message.message, "<code>ᴠᴇʀɪꜰʏɪɴɢ ʏᴏᴜʀ ᴅᴀᴛᴀ, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ...</code>")
         _bot, caption, forward_tag, datas, protect, button = await sts.get_data(user)
         filter = datas['filters']
         max_size = datas['max_size']
@@ -89,7 +89,7 @@ async def pub_(bot, message):
         else:
             extensions = None
         if not _bot:
-            await msg_edit(m, "<code>You haven't added any bot. Please add a bot using /settings!</code>", wait=True)
+            await msg_edit(m, "<code>ʏᴏᴜ ʜᴀᴠᴇɴ'ᴛ ᴀᴅᴅᴇᴅ ᴀɴʏ ʙᴏᴛ. ᴘʟᴇᴀsᴇ ᴀᴅᴅ ᴀ ʙᴏᴛ ᴜsɪɴɢ /settings!</code>", wait=True)
             await stop(client, user, i.bot_id)
             return
 
@@ -98,23 +98,23 @@ async def pub_(bot, message):
             client = await get_client(data, is_bot=_bot['is_bot'])
             await client.start()
         except Exception as e:
-            await m.edit(f"Error starting client: {e}")
+            await m.edit(f"ᴇʀʀᴏʀ sᴛᴀʀᴛɪɴɢ ᴄʟɪᴇɴᴛ: {e}")
             await stop(client, user, i.bot_id)
             return
 
-        await msg_edit(m, "<code>Processing...</code>")
+        await msg_edit(m, "<code>ᴘʀᴏᴄᴇssɪɴɢ...</code>")
         try:
             from_chat = await client.get_chat(sts.get("FROM"))
             to_chat = await client.get_chat(sts.get("TO"))
         except Exception as e:
-            await msg_edit(m, f"**Error:**\n`{e}`\n\n**Source/Target chat may be private. Use a userbot or make your bot an admin there.**", retry_btn(frwd_id), True)
+            await msg_edit(m, f"**ᴇʀʀᴏʀ:**\n`{e}`\n\n**sᴏᴜʀᴄᴇ/ᴛᴀʀɢᴇᴛ ᴄʜᴀᴛ ᴍᴀʏ ʙᴇ ᴘʀɪᴠᴀᴛᴇ. ᴜsᴇ ᴀ ᴜsᴇʀʙᴏᴛ ᴏʀ ᴍᴀᴋᴇ ʏᴏᴜʀ ʙᴏᴛ ᴀɴ ᴀᴅᴍɪɴ ᴛʜᴇʀᴇ.**", retry_btn(frwd_id), True)
             await stop(client, user, i.bot_id)
             return
         try:
-            k = await client.send_message(i.TO, "Testing")
+            k = await client.send_message(i.TO, "ᴛᴇsᴛɪɴɢ")
             await k.delete()
         except:
-            await msg_edit(m, f"**Please make your [UserBot/Bot](t.me/{_bot['username']}) an admin in the target channel with full permissions.**", retry_btn(frwd_id), True)
+            await msg_edit(m, f"**ᴘʟᴇᴀsᴇ ᴍᴀᴋᴇ ʏᴏᴜʀ [UserBot/Bot](t.me/{_bot['username']}) ᴀɴ ᴀᴅᴍɪɴ ɪɴ ᴛʜᴇ ᴛᴀʀɢᴇᴛ ᴄʜᴀɴɴᴇʟ ᴡɪᴛʜ ꜰᴜʟʟ ᴘᴇʀᴍɪssɪᴏɴs.**", retry_btn(frwd_id), True)
             await stop(client, user, i.bot_id)
             return
 
@@ -123,17 +123,17 @@ async def pub_(bot, message):
         if dburi is not None:
             connected, user_db = await connect_user_db(user, dburi, i.TO)
             if not connected:
-                await msg_edit(m, "<code>Could not connect to your DB. Duplicate files may be skipped after a restart.</code>")
+                await msg_edit(m, "<code>ᴄᴏᴜʟᴅ ɴᴏᴛ ᴄᴏɴɴᴇᴄᴛ ᴛᴏ ʏᴏᴜʀ ᴅʙ. ᴅᴜᴘʟɪᴄᴀᴛᴇ ᴇɴᴛʀɪᴇs ᴍᴀʏ ʙᴇ sᴋɪᴘᴘᴇᴅ ᴀꜰᴛᴇʀ ᴀ ʀᴇsᴛᴀʀᴛ.</code>")
             else:
                 user_have_db = True
         temp.forwardings += 1
         await db.add_frwd(user, i.bot_id)
 
-        await send(client, user, Script.FORWARD_START_TXT.format(_bot['name'], _bot['id'], from_chat.title, to_chat.title))
+        await send(client, user, Script.FORWARD_START_TXT.format(_bot['id'], _bot['name'], from_chat.title, to_chat.title))
 
         sts.add(time=True)
         sleep = 1 if _bot['is_bot'] else 10
-        await msg_edit(m, "<code>Processing...</code>")
+        await msg_edit(m, "<code>ᴘʀᴏᴄᴇssɪɴɢ...</code>")
         temp.IS_FRWD_CHAT.append(i.TO)
 
         try:
@@ -203,7 +203,7 @@ async def pub_(bot, message):
                     sts.add('total_files')
                     await asyncio.sleep(sleep)
         except Exception as e:
-            await msg_edit(m, f'<b>ERROR:</b>\n<code>{e}</code>', wait=True)
+            await msg_edit(m, f'<b>ᴇʀʀᴏʀ:</b>\n<code>{e}</code>', wait=True)
             logger.error(f"Error In Forwarding {e}")
             if user_have_db:
                 await user_db.drop_all()
@@ -226,7 +226,7 @@ async def pub_(bot, message):
         logger.error(f"A critical error occurred in the forwarding setup: {e}", exc_info=True)
         if i: # Ensure 'i' was defined before the error
             await stop(client, user, i.bot_id)
-        await message.answer("An unexpected error occurred and the task was cancelled.", show_alert=True)
+        await message.answer("ᴀɴ ᴜɴᴇxᴘᴇᴄᴛᴇᴅ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ ᴀɴᴅ ᴛʜᴇ ᴛᴀsᴋ ᴡᴀs ᴄᴀɴᴄᴇʟʟᴇᴅ.", show_alert=True)
 
 
 async def copy(user, bot, msg, m, sts, bot_info, from_chat, to_chat):
@@ -242,7 +242,7 @@ async def copy(user, bot, msg, m, sts, bot_info, from_chat, to_chat):
         await bot.copy_message(
               chat_id=sts.get('TO'),
               from_chat_id=sts.get('FROM'),
-              caption=msg.get("caption"),
+              caption=msg.get('caption'),
               message_id=msg.get("msg_id"),
               reply_markup=msg.get('button'),
               protect_content=msg.get("protect"))
@@ -317,8 +317,8 @@ async def edit(user, msg, title, status, sts, bot_info, from_chat, to_chat):
         progress, percentage = progress_bar_tuple(percentage)
         bar=f"{progress} ​• {percentage}%"
         button =  [[InlineKeyboardButton(bar, f'fwrdstatus#{status}#{percentage}#{i.id}')]]
-        text = TEXT.format(bot_info['name'], bot_info['id'], from_chat.title, to_chat.title, i.total, i.fetched, i.total_files, remaining, i.duplicate,
-                            i.deleted, i.skip, i.filtered, status, time_to_comple, title)
+        text = TEXT.format(i.total, i.fetched, i.total_files, remaining, i.duplicate,
+                            i.deleted, i.skip, i.filtered, status, time_to_comple, bot_info['id'], bot_info['name'], from_chat.title, to_chat.title, title)
         if status in ["ᴄᴀɴᴄᴇʟʟᴇᴅ", "ᴄᴏᴍᴘʟᴇᴛᴇᴅ"]:
            button.append([InlineKeyboardButton('• ᴄᴏᴍᴘʟᴇᴛᴇᴅ ​•', url='https://t.me/VJ_BOTZ')])
         else:
@@ -332,7 +332,7 @@ async def is_cancelled(client, user, msg, sts, bot_id, bot_info, from_chat, to_c
       if sts.TO in temp.IS_FRWD_CHAT:
          temp.IS_FRWD_CHAT.remove(sts.TO)
       await edit(user, msg, 'ᴄᴀɴᴄᴇʟʟᴇᴅ', "ᴄᴀɴᴄᴇʟʟᴇᴅ", sts, bot_info, from_chat, to_chat)
-      await send(client, user, Script.FORWARD_CANCEL_TXT.format(bot_info['name'], bot_info['id'], from_chat.title, to_chat.title))
+      await send(client, user, Script.FORWARD_CANCEL_TXT.format(bot_info['id'], bot_info['name'], from_chat.title, to_chat.title))
       await stop(client, user, bot_id)
       return True
    return False
@@ -428,7 +428,7 @@ def TimeFormatter(milliseconds: int) -> str:
     return tmp[:-2]
 
 def retry_btn(id):
-    return InlineKeyboardMarkup([[InlineKeyboardButton('♻️ RETRY ♻️', f"start_public_{id}")]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton('♻️ ʀᴇᴛʀʏ ♻️', f"start_public_{id}")]])
 
 @Client.on_callback_query(filters.regex(r'^terminate_frwd_'))
 async def terminate_frwding(bot, m):
@@ -437,7 +437,7 @@ async def terminate_frwding(bot, m):
     if user_id not in temp.CANCEL:
         temp.CANCEL[user_id] = {}
     temp.CANCEL[user_id][bot_id] = True
-    await m.answer("Forwarding ᴄᴀɴᴄᴇʟʟᴇᴅ !", show_alert=True)
+    await m.answer("ғᴏʀᴡᴀʀᴅɪɴɢ ᴄᴀɴᴄᴇʟʟᴇᴅ !", show_alert=True)
 
 @Client.on_callback_query(filters.regex(r'^fwrdstatus'))
 async def status_msg(bot, msg):
@@ -463,16 +463,16 @@ async def close(bot, update):
 async def stop_forward(client, message):
     user_id = message.from_user.id
     if not await db.is_forwad_exit(user_id):
-        return await message.reply('**No Ongoing Forwards To Cancel**')
+        return await message.reply('**ɴᴏ ᴏɴɢᴏɪɴɢ ғᴏʀᴡᴀʀᴅs ᴛᴏ ᴄᴀɴᴄᴇʟ**')
 
     buttons = []
     for bot_id in temp.lock.get(user_id, []):
-        buttons.append([InlineKeyboardButton(f"Bot ID: {bot_id}", callback_data=f"stop_task_{bot_id}")])
+        buttons.append([InlineKeyboardButton(f"ғᴏʀᴡᴀʀᴅ ɪᴅ: {bot_id}", callback_data=f"stop_task_{bot_id}")])
 
     if not buttons:
-        return await message.reply('**No Ongoing Forwards To Cancel**')
+        return await message.reply('**ɴᴏ ᴏɴɢᴏɪɴɢ ғᴏʀᴡᴀʀᴅs ᴛᴏ ᴄᴀɴᴄᴇʟ**')
 
-    await message.reply("Which forwarding task would you like to stop?", reply_markup=InlineKeyboardMarkup(buttons))
+    await message.reply("ᴡʜɪᴄʜ ғᴏʀᴡᴀʀᴅɪɴɢ ᴛᴀsᴋ ᴡᴏᴜʟᴅ ʏᴏᴜ ʟɪᴋᴇ ᴛᴏ sᴛᴏᴘ?", reply_markup=InlineKeyboardMarkup(buttons))
 
 
 @Client.on_callback_query(filters.regex(r'^stop_task_'))
@@ -482,7 +482,7 @@ async def stop_task_callback(bot, query):
     if user_id not in temp.CANCEL:
         temp.CANCEL[user_id] = {}
     temp.CANCEL[user_id][bot_id] = True
-    await query.message.edit(f"<b>Successfully Canceled Task for Bot ID: {bot_id}</b>")
+    await query.message.edit(f"<b>sᴜᴄᴄᴇssꜰᴜʟʟʏ ᴄᴀɴᴄᴇʟᴇᴅ ᴛᴀsᴋ ғᴏʀ ғᴏʀᴡᴀʀᴅ ɪᴅ: {bot_id}</b>")
 
 async def restart_pending_forwads(bot, user):
     user_id = user['user_id']
@@ -529,7 +529,7 @@ async def restart_pending_forwads(bot, user):
        else:
            extensions = None
        if not _bot:
-          await msg_edit(m, "<code>You didn't add any bot. Please add a bot using /settings !</code>", wait=True)
+          await msg_edit(m, "<code>ʏᴏᴜ ᴅɪᴅɴ'ᴛ ᴀᴅᴅ ᴀɴʏ ʙᴏᴛ. ᴘʟᴇᴀsᴇ ᴀᴅᴅ ᴀ ʙᴏᴛ ᴜsɪɴɢ /settings !</code>", wait=True)
           return
        if _bot['is_bot'] == True:
           data = _bot['token']
@@ -543,7 +543,7 @@ async def restart_pending_forwads(bot, user):
           await m.edit(e)
           return
        try:
-          await msg_edit(m, "<code>processing..</code>")
+          await msg_edit(m, "<code>ᴘʀᴏᴄᴇssɪɴɢ...</code>")
        except:
           await db.rmve_frwd(user_id, bot_id)
           return
@@ -551,14 +551,14 @@ async def restart_pending_forwads(bot, user):
           from_chat = await client.get_chat(sts.get("FROM"))
           to_chat = await client.get_chat(sts.get("TO"))
        except Exception as e:
-          await msg_edit(m, f"**Error:**\n`{e}`\n\n**Source/Target chat may be a private channel / group. Use userbot (user must be member over there) or make your [Bot](t.me/{_bot['username']}) an admin over there**", retry_btn(forward_id), True)
+          await msg_edit(m, f"**ᴇʀʀᴏʀ:**\n`{e}`\n\n**sᴏᴜʀᴄᴇ/ᴛᴀʀɢᴇᴛ ᴄʜᴀᴛ ᴍᴀʏ ʙᴇ ᴀ ᴘʀɪᴠᴀᴛᴇ ᴄʜᴀɴɴᴇʟ / ɢʀᴏᴜᴘ. ᴜsᴇ ᴀ ᴜsᴇʀʙᴏᴛ (ᴜsᴇʀ ᴍᴜsᴛ ʙᴇ ᴀ ᴍᴇᴍʙᴇʀ) ᴏʀ ᴍᴀᴋᴇ ʏᴏᴜʀ [ʙᴏᴛ](t.me/{_bot['username']}) ᴀɴ ᴀᴅᴍɪɴ ᴛʜᴇʀᴇ**", retry_btn(forward_id), True)
           await stop(client, user_id, bot_id)
           return
        try:
-          k = await client.send_message(i.TO, "Testing")
+          k = await client.send_message(i.TO, "ᴛᴇsᴛɪɴɢ")
           await k.delete()
        except:
-          await msg_edit(m, f"**Please Make Your [UserBot / Bot](t.me/{_bot['username']}) Admin In Target Channel With Full Permissions**", retry_btn(forward_id), True)
+          await msg_edit(m, f"**ᴘʟᴇᴀsᴇ ᴍᴀᴋᴇ ʏᴏᴜʀ [UserBot / Bot](t.me/{_bot['username']}) ᴀᴅᴍɪɴ ɪɴ ᴛᴀʀɢᴇᴛ ᴄʜᴀɴɴᴇʟ ᴡɪᴛʜ ꜰᴜʟʟ ᴘᴇʀᴍɪssɪᴏɴs**", retry_btn(forward_id), True)
           await stop(client, user_id, bot_id)
           return
     except:
@@ -569,7 +569,7 @@ async def restart_pending_forwads(bot, user):
     if dburi is not None:
         connected, user_db = await connect_user_db(user_id, dburi, i.TO)
         if not connected:
-            await bot.send_message(user_id, "<code>Cannot Connected Your db Errors Found Dup files Have Been Skipped after Restart</code>")
+            await bot.send_message(user_id, "<code>ᴄᴀɴɴᴏᴛ ᴄᴏɴɴᴇᴄᴛ ᴛᴏ ʏᴏᴜʀ ᴅʙ. ᴅᴜᴘʟɪᴄᴀᴛᴇ ꜰɪʟᴇs ᴍᴀʏ ʙᴇ sᴋɪᴘᴘᴇᴅ ᴀꜰᴛᴇʀ ʀᴇsᴛᴀʀᴛ.</code>")
         else:
             user_have_db = True
     try:
@@ -654,7 +654,7 @@ async def restart_pending_forwads(bot, user):
                sts.add('total_files')
                await asyncio.sleep(sleep)
     except Exception as e:
-        await bot.send_message(user_id, f'<b>ERROR:</b>\n<code>{e}</code>')
+        await bot.send_message(user_id, f'<b>ᴇʀʀᴏʀ:</b>\n<code>{e}</code>')
         if user_have_db:
             await user_db.drop_all()
             await user_db.close()
