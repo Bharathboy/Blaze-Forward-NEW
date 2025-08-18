@@ -14,7 +14,7 @@ class Config:
     DATABASE_URI = environ.get("DATABASE_URI", "")
     DATABASE_NAME = environ.get("DATABASE_NAME", "")
     PREMIUM_USERS = {
-    123456789: "gold",
+    634637418: "gold",
     987654321: "silver",
     654321098: "bronze"
     }
@@ -33,3 +33,4 @@ class temp(object):
     BANNED_USERS = []
     IS_FRWD_CHAT = []
     USER_LOCKS = {} # To prevent race conditions
+    ACTIVE_STATUS_MSGS = {} # {user_id: {bot_id: message_object}}

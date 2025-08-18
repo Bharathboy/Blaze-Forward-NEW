@@ -193,3 +193,38 @@ async def get_bot_uptime(start_time):
 # Don't Remove Credit Tg - @VJ_Botz
 # Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
 # Ask Doubt on telegram @KingVJ01
+
+@Client.on_message(filters.private & filters.command(['ongoing']))
+async def ongoing_forwards(client, message):
+    user_id = message.from_user.id
+    if not await db.is_forwad_exit(user_id):
+        return await message.reply('**ɴᴏ ᴏɴɢᴏɪɴɢ ғᴏʀᴡᴀʀᴅs**')
+
+    forwards_cursor = await db.get_all_frwd()
+    active_user_forwards = False
+    async for forward in forwards_cursor:
+        if forward.get('user_id') == user_id:
+            active_user_forwards = True
+            bot_id = forward.get('bot_id')
+            
+            # Delete old message object if it exists in memory and on Telegram
+            try:
+                old_msg = temp.ACTIVE_STATUS_MSGS.get(user_id, {}).get(bot_id)
+                if old_msg:
+                    await old_msg.delete()
+            except Exception:
+                pass # Already deleted or other error
+
+            # Send a new status message
+            new_sts_msg = await message.reply_text("`Generating new status message...`")
+            
+            # Update the message object in our global state
+            temp.ACTIVE_STATUS_MSGS.setdefault(user_id, {})[bot_id] = new_sts_msg
+            
+            # Update the message ID in the database for persistence on restart
+            details = await db.get_forward_details(user_id, bot_id)
+            details['msg_id'] = new_sts_msg.id
+            await db.update_forward(user_id, bot_id, details)
+    
+    if not active_user_forwards:
+        await message.reply('**ɴᴏ ᴏɴɢᴏɪɴɢ ғᴏʀᴡᴀʀᴅs**')

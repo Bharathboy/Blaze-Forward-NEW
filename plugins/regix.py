@@ -68,6 +68,7 @@ async def pub_(bot, message):
             return
 
         m = await msg_edit(message.message, "<code>ᴠᴇʀɪꜰʏɪɴɢ ʏᴏᴜʀ ᴅᴀᴛᴀ, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ...</code>")
+        temp.ACTIVE_STATUS_MSGS.setdefault(user, {})[i.bot_id] = m
         _bot, caption, forward_tag, datas, protect, button = await sts.get_data(user)
         filter = datas['filters']
         max_size = datas['max_size']
@@ -139,15 +140,15 @@ async def pub_(bot, message):
         try:
             MSG = []
             pling = 0
-            await edit(user, m, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, _bot, from_chat, to_chat)
+            await edit(user, i.bot_id, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, _bot, from_chat, to_chat)
             async for message in iter_messages(client, chat_id=sts.get("FROM"), limit=sts.get("limit"), offset=sts.get("skip"), filters=filter, max_size=max_size):
-                if await is_cancelled(client, user, m, sts, i.bot_id, _bot, from_chat, to_chat):
+                if await is_cancelled(client, user, sts, i.bot_id, _bot, from_chat, to_chat):
                     if user_have_db:
                         await user_db.drop_all()
                         await user_db.close()
                     return
                 if pling % 20 == 0:
-                    await edit(user, m, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, _bot, from_chat, to_chat)
+                    await edit(user, i.bot_id, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, _bot, from_chat, to_chat)
                 pling += 1
                 sts.add('fetched')
 
@@ -192,18 +193,18 @@ async def pub_(bot, message):
                     notcompleted = len(MSG)
                     completed = sts.get('total') - sts.get('fetched')
                     if (notcompleted >= 100 or completed <= 100):
-                        await forward(user, client, MSG, m, sts, protect, _bot, from_chat, to_chat)
+                        await forward(user, client, MSG, sts, protect, _bot, from_chat, to_chat)
                         sts.add('total_files', notcompleted)
                         await asyncio.sleep(10)
                         MSG = []
                 else:
                     new_caption = custom_caption(message, caption)
                     details = {"msg_id": message.id, "media": media(message), "caption": new_caption, 'button': button, "protect": protect}
-                    await copy(user, client, details, m, sts, _bot, from_chat, to_chat)
+                    await copy(user, client, details, i.bot_id, sts, _bot, from_chat, to_chat)
                     sts.add('total_files')
                     await asyncio.sleep(sleep)
         except Exception as e:
-            await msg_edit(m, f'<b>ᴇʀʀᴏʀ:</b>\n<code>{e}</code>', wait=True)
+            await edit(user, i.bot_id, 'ᴇʀʀᴏʀ', f'{e}', sts, _bot, from_chat, to_chat)
             logger.error(f"Error In Forwarding {e}")
             if user_have_db:
                 await user_db.drop_all()
@@ -216,7 +217,7 @@ async def pub_(bot, message):
         if sts.TO in temp.IS_FRWD_CHAT:
             temp.IS_FRWD_CHAT.remove(sts.TO)
         await send(client, user, "<b>🎉 ғᴏʀᴡᴀᴅɪɴɢ ᴄᴏᴍᴘʟᴇᴛᴇᴅ</b>")
-        await edit(user, m, 'ᴄᴏᴍᴘʟᴇᴛᴇᴅ', "ᴄᴏᴍᴘʟᴇᴛᴇᴅ", sts, _bot, from_chat, to_chat)
+        await edit(user, i.bot_id, 'ᴄᴏᴍᴘʟᴇᴛᴇᴅ', "ᴄᴏᴍᴘʟᴇᴛᴇᴅ", sts, _bot, from_chat, to_chat)
         if user_have_db:
             await user_db.drop_all()
             await user_db.close()
@@ -229,7 +230,7 @@ async def pub_(bot, message):
         await message.answer("ᴀɴ ᴜɴᴇxᴘᴇᴄᴛᴇᴅ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ ᴀɴᴅ ᴛʜᴇ ᴛᴀsᴋ ᴡᴀs ᴄᴀɴᴄᴇʟʟᴇᴅ.", show_alert=True)
 
 
-async def copy(user, bot, msg, m, sts, bot_info, from_chat, to_chat):
+async def copy(user_id, bot, msg, bot_id, sts, bot_info, from_chat, to_chat):
    try:
      if msg.get("media") and msg.get("caption"):
         await bot.send_cached_media(
@@ -247,26 +248,27 @@ async def copy(user, bot, msg, m, sts, bot_info, from_chat, to_chat):
               reply_markup=msg.get('button'),
               protect_content=msg.get("protect"))
    except FloodWait as e:
-     await edit(user, m, 'ᴘʀᴏɢʀᴇssɪɴɢ', e.value, sts, bot_info, from_chat, to_chat)
+     await edit(user_id, bot_id, 'ᴘʀᴏɢʀᴇssɪɴɢ', e.value, sts, bot_info, from_chat, to_chat)
      await asyncio.sleep(e.value)
-     await edit(user, m, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, bot_info, from_chat, to_chat)
-     await copy(user, bot, msg, m, sts, bot_info, from_chat, to_chat)
+     await edit(user_id, bot_id, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, bot_info, from_chat, to_chat)
+     await copy(user_id, bot, msg, bot_id, sts, bot_info, from_chat, to_chat)
    except Exception as e:
      logger.error(f"Error In Copying {e}")
      sts.add('deleted')
 
-async def forward(user, bot, msg, m, sts, protect, bot_info, from_chat, to_chat):
+async def forward(user_id, bot, msg_ids, sts, protect, bot_info, from_chat, to_chat):
    try:
      await bot.forward_messages(
            chat_id=sts.get('TO'),
            from_chat_id=sts.get('FROM'),
            protect_content=protect,
-           message_ids=msg)
+           message_ids=msg_ids)
    except FloodWait as e:
-     await edit(user, m, 'ᴘʀᴏɢʀᴇssɪɴɢ', e.value, sts, bot_info, from_chat, to_chat)
+     bot_id = bot_info['id']
+     await edit(user_id, bot_id, 'ᴘʀᴏɢʀᴇssɪɴɢ', e.value, sts, bot_info, from_chat, to_chat)
      await asyncio.sleep(e.value)
-     await edit(user, m, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, bot_info, from_chat, to_chat)
-     await forward(bot, msg, m, sts, protect, bot_info, from_chat, to_chat)
+     await edit(user_id, bot_id, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, bot_info, from_chat, to_chat)
+     await forward(user_id, bot, msg_ids, sts, protect, bot_info, from_chat, to_chat)
 
 
 PROGRESS = """
@@ -293,13 +295,18 @@ async def msg_edit(msg, text, button=None, wait=None):
            await asyncio.sleep(e.value)
            return await msg_edit(msg, text, button, wait)
 
-async def edit(user, msg, title, status, sts, bot_info, from_chat, to_chat):
+async def edit(user_id, bot_id, title, status, sts, bot_info, from_chat, to_chat):
     try:
+        msg = temp.ACTIVE_STATUS_MSGS.get(user_id, {}).get(bot_id)
+        if not msg:
+            logging.warning(f"No active status message for user {user_id}, bot {bot_id}")
+            return
+            
         i = sts.get(full=True)
         status = 'Forwarding' if status == 5 else f"sleeping {status} s" if str(status).isnumeric() else status
         percentage = "{:.0f}".format(float(i.fetched)*100/float(i.total)) if float(i.total) > 0 else "0"
         client_type = sts.get('client_type')
-        await update_forward(user_id=user, last_id=None, start_time=i.start, limit=i.limit, chat_id=i.FROM, toid=i.TO, forward_id=None, msg_id=msg.id, fetched=i.fetched, deleted=i.deleted, total=i.total_files, duplicate=i.duplicate, skip=i.skip, filterd=i.filtered, client_type=client_type, bot_id=i.bot_id)
+        await update_forward(user_id=user_id, last_id=None, start_time=i.start, limit=i.limit, chat_id=i.FROM, toid=i.TO, forward_id=None, msg_id=msg.id, fetched=i.fetched, deleted=i.deleted, total=i.total_files, duplicate=i.duplicate, skip=i.skip, filterd=i.filtered, client_type=client_type, bot_id=i.bot_id)
         now = time.time()
         diff = int(now - i.start) if i.start>0 else 0
         speed = sts.divide(i.fetched, diff)
@@ -325,28 +332,30 @@ async def edit(user, msg, title, status, sts, bot_info, from_chat, to_chat):
            button.append([InlineKeyboardButton('• ᴄᴀɴᴄᴇʟ', f'terminate_frwd_{i.bot_id}')])
         await msg_edit(msg, text, InlineKeyboardMarkup(button))
     except Exception as e:
-        logging.error(e)
+        logging.error(e, exc_info=True)
 
-async def is_cancelled(client, user, msg, sts, bot_id, bot_info, from_chat, to_chat):
-   if temp.CANCEL.get(user, {}).get(bot_id):
+async def is_cancelled(client, user_id, sts, bot_id, bot_info, from_chat, to_chat):
+   if temp.CANCEL.get(user_id, {}).get(bot_id):
       if sts.TO in temp.IS_FRWD_CHAT:
          temp.IS_FRWD_CHAT.remove(sts.TO)
-      await edit(user, msg, 'ᴄᴀɴᴄᴇʟʟᴇᴅ', "ᴄᴀɴᴄᴇʟʟᴇᴅ", sts, bot_info, from_chat, to_chat)
-      await send(client, user, Script.FORWARD_CANCEL_TXT.format(bot_info['id'], bot_info['name'], from_chat.title, to_chat.title))
-      await stop(client, user, bot_id)
+      await edit(user_id, bot_id, 'ᴄᴀɴᴄᴇʟʟᴇᴅ', "ᴄᴀɴᴄᴇʟʟᴇᴅ", sts, bot_info, from_chat, to_chat)
+      await send(client, user_id, Script.FORWARD_CANCEL_TXT.format(bot_info['id'], bot_info['name'], from_chat.title, to_chat.title))
+      await stop(client, user_id, bot_id)
       return True
    return False
 
-async def stop(client, user, bot_id):
+async def stop(client, user_id, bot_id):
    try:
      if client:
         await client.stop()
    except:
      pass
-   await db.rmve_frwd(user, bot_id)
+   await db.rmve_frwd(user_id, bot_id)
    temp.forwardings -= 1
-   if user in temp.lock and bot_id in temp.lock[user]:
-       temp.lock[user].remove(bot_id)
+   if user_id in temp.lock and bot_id in temp.lock[user_id]:
+       temp.lock[user_id].remove(bot_id)
+   if user_id in temp.ACTIVE_STATUS_MSGS and bot_id in temp.ACTIVE_STATUS_MSGS[user_id]:
+       del temp.ACTIVE_STATUS_MSGS[user_id][bot_id]
 
 async def send(bot, user, text):
    try:
@@ -507,6 +516,7 @@ async def restart_pending_forwads(bot, user):
        sts.add('deleted', value=settings['deleted'])
        sts.add('total_files', value=settings['total'])
        m = await bot.get_messages(user_id, settings['msg_id'])
+       temp.ACTIVE_STATUS_MSGS.setdefault(user_id, {})[bot_id] = m
        _bot, caption, forward_tag, datas, protect, button = await sts.get_data(user_id)
        i = sts.get(full=True)
        filter = datas['filters']
@@ -587,15 +597,15 @@ async def restart_pending_forwads(bot, user):
     try:
       MSG = []
       pling=0
-      await edit(user_id, m, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, _bot, from_chat, to_chat)
+      await edit(user_id, bot_id, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, _bot, from_chat, to_chat)
       async for message in iter_messages(client, chat_id=sts.get("FROM"), limit=sts.get("limit"), offset=skiping, filters=filter, max_size=max_size):
-            if await is_cancelled(client, user_id, m, sts, bot_id, _bot, from_chat, to_chat):
+            if await is_cancelled(client, user_id, sts, bot_id, _bot, from_chat, to_chat):
                 if user_have_db:
                    await user_db.drop_all()
                    await user_db.close()
                 return
             if pling %20 == 0:
-               await edit(user_id, m, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, _bot, from_chat, to_chat)
+               await edit(user_id, bot_id, 'ᴘʀᴏɢʀᴇssɪɴɢ', 5, sts, _bot, from_chat, to_chat)
             pling += 1
             sts.add('fetched')
 
@@ -643,14 +653,14 @@ async def restart_pending_forwads(bot, user):
                completed = sts.get('total') - sts.get('fetched')
                if ( notcompleted >= 100
                     or completed <= 100):
-                  await forward(user_id, client, MSG, m, sts, protect, _bot, from_chat, to_chat)
+                  await forward(user_id, client, MSG, sts, protect, _bot, from_chat, to_chat)
                   sts.add('total_files', notcompleted)
                   await asyncio.sleep(10)
                   MSG = []
             else:
                new_caption = custom_caption(message, caption)
                details = {"msg_id": message.id, "media": media(message), "caption": new_caption, 'button': button, "protect": protect}
-               await copy(user_id, client, details, m, sts, _bot, from_chat, to_chat)
+               await copy(user_id, client, details, bot_id, sts, _bot, from_chat, to_chat)
                sts.add('total_files')
                await asyncio.sleep(sleep)
     except Exception as e:
@@ -669,7 +679,7 @@ async def restart_pending_forwads(bot, user):
     if user_have_db:
         await user_db.drop_all()
         await user_db.close()
-    await edit(user_id, m, 'ᴄᴏᴍᴘʟᴇᴛᴇᴅ', "ᴄᴏᴍᴘʟᴇᴛᴇᴅ", sts, _bot, from_chat, to_chat)
+    await edit(user_id, bot_id, 'ᴄᴏᴍᴘʟᴇᴛᴇᴅ', "ᴄᴏᴍᴘʟᴇᴛᴇᴅ", sts, _bot, from_chat, to_chat)
     await stop(client, user_id, bot_id)
 
 async def store_vars(user_id, bot_id):
