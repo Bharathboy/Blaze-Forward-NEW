@@ -13,3 +13,4 @@ plugins/__pycache__/unequeify.cpython-311.pyc
 plugins/__pycache__/utils.cpython-311.pyc
 VJ-Forward-Bot.session
 .gitignore
+plugins/__pycache__/premium.cpython-311.pyc

@@ -121,15 +121,15 @@ async def ask_for_to_channel(bot: Client, user_id: int, chat_id: int, message=No
         await bot.send_message(chat_id, prompt_message)
 
 
-def get_task_limit(user_id):
-    premium_status = Config.PREMIUM_USERS.get(user_id)
-    return Config.TASK_LIMITS.get(premium_status, Config.TASK_LIMITS["default"])
+async def get_task_limit(user_id):
+    rank = await db.get_premium_user_rank(user_id)
+    return Config.TASK_LIMITS.get(rank, Config.TASK_LIMITS["default"])
 
 
 @Client.on_message(filters.private & filters.command(COMMANDS))
 async def forward_command(bot: Client, message):
     user_id = message.from_user.id
-    task_limit = get_task_limit(user_id)
+    task_limit = await get_task_limit(user_id)
     active_tasks = len(temp.lock.get(user_id, []))
 
     if active_tasks >= task_limit:

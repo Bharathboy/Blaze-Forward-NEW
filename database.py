@@ -1,5 +1,6 @@
 import motor.motor_asyncio
 from config import Config
+from datetime import datetime
 
 class Db:
 
@@ -11,6 +12,7 @@ class Db:
         self.col = self.db.users
         self.nfy = self.db.notify
         self.chl = self.db.channels
+        self.premium = self.db.premium_users
 
     def new_user(self, id, name):
         return dict(
@@ -227,5 +229,30 @@ class Db:
    
     async def update_forward(self, user_id, bot_id, details):
         await self.nfy.update_one({'user_id': user_id, 'bot_id': bot_id}, {'$set': {'details': details}})
+    
+    async def add_premium_user(self, user_id, rank, expiry_time):
+        await self.premium.update_one(
+            {'user_id': user_id},
+            {'$set': {'rank': rank, 'expiry_time': expiry_time}},
+            upsert=True
+        )
+
+    async def remove_premium_user(self, user_id):
+        await self.premium.delete_one({'user_id': user_id})
+
+    async def is_premium_user(self, user_id):
+        user = await self.premium.find_one({'user_id': user_id})
+        if not user:
+            return False
+        if user['expiry_time'] and user['expiry_time'] < datetime.now():
+            await self.remove_premium_user(user_id)
+            return False
+        return True
+
+    async def get_premium_user_rank(self, user_id):
+        if await self.is_premium_user(user_id):
+            user = await self.premium.find_one({'user_id': user_id})
+            return user['rank']
+        return "default"
 
 db = Db(Config.DATABASE_URI, Config.DATABASE_NAME)

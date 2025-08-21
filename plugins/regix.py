@@ -21,9 +21,9 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 TEXT = Script.TEXT
 
-def get_task_limit(user_id):
-    premium_status = Config.PREMIUM_USERS.get(user_id)
-    return Config.TASK_LIMITS.get(premium_status, Config.TASK_LIMITS["default"])
+async def get_task_limit(user_id):
+    rank = await db.get_premium_user_rank(user_id)
+    return Config.TASK_LIMITS.get(rank, Config.TASK_LIMITS["default"])
 
 
 @Client.on_callback_query(filters.regex(r'^start_public'))
@@ -39,7 +39,7 @@ async def pub_(bot, message):
 
 
     async with temp.USER_LOCKS[user]:
-        task_limit = get_task_limit(user)
+        task_limit = await get_task_limit(user)
         active_tasks = len(temp.lock.get(user, []))
 
         if active_tasks >= task_limit:
