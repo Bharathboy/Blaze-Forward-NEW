@@ -240,19 +240,35 @@ class Db:
     async def remove_premium_user(self, user_id):
         await self.premium.delete_one({'user_id': user_id})
 
+    async def get_premium_user(self, user_id):
+        return await self.premium.find_one({'user_id': user_id})
+
     async def is_premium_user(self, user_id):
-        user = await self.premium.find_one({'user_id': user_id})
+        user = await self.get_premium_user(user_id)
         if not user:
             return False
-        if user['expiry_time'] and user['expiry_time'] < datetime.now():
-            await self.remove_premium_user(user_id)
+        # Check if expiry_time exists and if it's in the past
+        if user.get('expiry_time') and user['expiry_time'] < datetime.now():
             return False
         return True
 
     async def get_premium_user_rank(self, user_id):
         if await self.is_premium_user(user_id):
-            user = await self.premium.find_one({'user_id': user_id})
+            user = await self.get_premium_user(user_id)
             return user['rank']
         return "default"
+        
+    async def get_and_remove_expired_users(self):
+        expired_users = []
+        current_time = datetime.now()
+        # Find users with an expiry_time that is not null and is in the past
+        cursor = self.premium.find({"expiry_time": {"$ne": None, "$lt": current_time}})
+        async for user in cursor:
+            expired_users.append(user['user_id'])
+        
+        if expired_users:
+            await self.premium.delete_many({"user_id": {"$in": expired_users}})
+            
+        return expired_users
 
 db = Db(Config.DATABASE_URI, Config.DATABASE_NAME)

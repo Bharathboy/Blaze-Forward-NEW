@@ -3,15 +3,51 @@
 # Ask Doubt on telegram @KingVJ01
 
 import asyncio, logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s ",
+    # (%(pathname)s:%(lineno)d)",
+    force=True
+)
+
+# Quiet pyrogram (only WARNING and above)
+pyro = logging.getLogger("pyrogram")
+pyro.setLevel(logging.WARNING)
 from config import Config
 from pyrogram import Client as VJ, idle, types
 from typing import Union, Optional, AsyncGenerator
 from logging.handlers import RotatingFileHandler
 from plugins.regix import restart_forwards
+from database import db
 
 # Don't Remove Credit Tg - @VJ_Botz
 # Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
 # Ask Doubt on telegram @KingVJ01
+
+
+async def check_expired_premiums(client):
+    """Periodically checks for and removes expired premium plans, notifying users."""
+    while True:
+        try:
+            expired_user_ids = await db.get_and_remove_expired_users()
+            for user_id in expired_user_ids:
+                try:
+                    await asyncio.sleep(1)
+                    await client.send_message(
+                        user_id,
+                        "😢 **Your premium plan has expired.** 😢\n\n"
+                        "You have been reverted to the **Free** plan. To upgrade again, please contact the bot owner."
+                    )
+                    logging.info(f"Sent expiration notice to user {user_id}")
+                except Exception as e:
+                    logging.warning(f"Could not send expiration notice to user {user_id}: {e}")
+            
+            # Sleep for 1 hour before the next check
+            await asyncio.sleep(3600)
+        except Exception as e:
+            logging.error(f"Error in background premium check: {e}", exc_info=True)
+            # Sleep for 5 minutes on error to avoid spamming logs
+            await asyncio.sleep(300)
 
 if __name__ == "__main__":
     VJBot = VJ(
@@ -64,8 +100,12 @@ if __name__ == "__main__":
     async def main():
         await VJBot.start()
         bot_info  = await VJBot.get_me()
+        
+        # Start the background task to check for expired premiums
+        asyncio.create_task(check_expired_premiums(VJBot))
+        
         await restart_forwards(VJBot)
-        print("Bot Started.")
+        logging.info("Bot Started.")
         await idle()
 
     asyncio.get_event_loop().run_until_complete(main())

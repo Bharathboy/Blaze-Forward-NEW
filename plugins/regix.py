@@ -17,7 +17,7 @@ from .db import connect_user_db
 from pyrogram.types import Message
 
 CLIENT = CLIENT()
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 TEXT = Script.TEXT
 
