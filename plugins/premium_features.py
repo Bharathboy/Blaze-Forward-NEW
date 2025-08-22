@@ -61,6 +61,7 @@ async def set_regex_filter(client, query):
     if not await is_premium(query):
         return
     
+    back_button = InlineKeyboardMarkup([[InlineKeyboardButton('⬅️ Back', callback_data='regex_filter')]])
     user_id = query.from_user.id
     await query.message.edit_text("Please send me the regex pattern you want to use for filtering.")
     
@@ -70,12 +71,15 @@ async def set_regex_filter(client, query):
             try:
                 re.compile(response.text)
                 await update_configs(user_id, 'regex_filter', response.text)
-                await query.message.reply_text(f"✅ Regex filter has been set to:\n`{response.text}`")
+                await response.reply_text(
+                    f"✅ Regex filter has been set to:\n`{response.text}`",
+                    reply_markup=back_button
+                )
                 break
             except re.error:
-                await query.message.reply_text("That is not a valid regex pattern. Please try again.")
+                await response.reply_text("That is not a valid regex pattern. Please try again.")
         else:
-            await query.message.reply_text("Invalid input. Please send a valid regex pattern.")
+            await response.reply_text("Invalid input. Please send a valid regex pattern.", reply_markup=back_button)
             break
 
 @Client.on_callback_query(filters.regex(r'^show_regex'))
@@ -93,9 +97,10 @@ async def remove_regex_filter(client, query):
     if not await is_premium(query):
         return
     
+    back_button = InlineKeyboardMarkup([[InlineKeyboardButton('⬅️ Back', callback_data='regex_filter')]])
     user_id = query.from_user.id
     await update_configs(user_id, 'regex_filter', None)
-    await query.message.edit_text("✅ Regex filter has been removed.")
+    await query.message.edit_text("✅ Regex filter has been removed.", reply_markup=back_button)
 
 @Client.on_callback_query(filters.regex(r'^message_replacements'))
 async def message_replacements_settings(client, query):
@@ -128,6 +133,7 @@ async def set_message_replacement(client, query):
     if not await is_premium(query):
         return
 
+    back_button = InlineKeyboardMarkup([[InlineKeyboardButton('⬅️ Back', callback_data='message_replacements')]])
     user_id = query.from_user.id
     await query.message.edit_text(
         "Please send the text to find, followed by `|` and the replacement text.\n\n"
@@ -139,9 +145,7 @@ async def set_message_replacement(client, query):
     response = await client.listen(user_id)
     if response.text:
         configs = await get_configs(user_id)
-        replacements = configs.get('message_replacements', {})
-        if replacements is None:
-            replacements = {}
+        replacements = configs.get('message_replacements') or {}
         
         lines = response.text.split('\n')
         added_count = 0
@@ -153,9 +157,9 @@ async def set_message_replacement(client, query):
         
         if added_count > 0:
             await update_configs(user_id, 'message_replacements', replacements)
-            await query.message.reply_text(f"✅ Successfully added/updated {added_count} replacement rule(s).")
+            await response.reply_text(f"✅ Successfully added/updated {added_count} replacement rule(s).", reply_markup=back_button)
         else:
-            await query.message.reply_text("Invalid format. Please use `find|replace`.")
+            await response.reply_text("Invalid format. Please use `find|replace`.", reply_markup=back_button)
 
 @Client.on_callback_query(filters.regex(r'^show_replacements'))
 async def show_message_replacements(client, query):
@@ -180,9 +184,10 @@ async def remove_message_replacements(client, query):
     if not await is_premium(query):
         return
         
+    back_button = InlineKeyboardMarkup([[InlineKeyboardButton('⬅️ Back', callback_data='message_replacements')]])
     user_id = query.from_user.id
     await update_configs(user_id, 'message_replacements', None)
-    await query.message.edit_text("✅ All message replacements have been removed.")
+    await query.message.edit_text("✅ All message replacements have been removed.", reply_markup=back_button)
 
 @Client.on_callback_query(filters.regex(r'^persistent_deduplication'))
 async def persistent_deduplication_settings(client, query):
