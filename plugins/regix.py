@@ -85,7 +85,7 @@ async def pub_(bot, message):
             persistent_deduplication = datas.get('persistent_deduplication', False)
             regex_filter_mode = datas.get('regex_filter_mode', 'exclude')
 
-        forwarding_speed = Config.FORWARDING_SPEED.get(user_rank, Config.FORWARDING_SPEED["default"])
+        forwarding_speed = Config.FORWARDING_SPEED.get(user_rank, Config.FORWARDING_SPEED["default"]) if _bot['is_bot'] else 10
         
         dburi = datas['db_uri']
         if (persistent_deduplication or datas['skip_duplicate']) and not dburi:
@@ -567,6 +567,19 @@ async def restart_pending_forwads(bot, user):
        temp.ACTIVE_STATUS_MSGS.setdefault(user_id, {})[bot_id] = m
        _bot, caption, forward_tag, datas, protect, button = await sts.get_data(user_id)
        i = sts.get(full=True)
+       user_rank = await db.get_premium_user_rank(user_id)
+       if user_rank == "default":
+            # If user is not premium, disable premium features for this task
+            regex_filter = None
+            message_replacements = None
+            persistent_deduplication = False
+            regex_filter_mode = 'exclude'
+       else:
+            regex_filter = datas.get('regex_filter')
+            message_replacements = datas.get('message_replacements')
+            persistent_deduplication = datas.get('persistent_deduplication', False)
+            regex_filter_mode = datas.get('regex_filter_mode', 'exclude')
+       forwarding_speed = Config.FORWARDING_SPEED.get(user_rank, Config.FORWARDING_SPEED["default"]) if _bot['is_bot'] else 10
        filter = datas['filters']
        max_size = datas['max_size']
        min_size = datas['min_size']
@@ -624,8 +637,12 @@ async def restart_pending_forwads(bot, user):
        return
     user_have_db = False
     dburi = datas['db_uri']
-    if dburi is not None:
-        connected, user_db = await connect_user_db(user_id, dburi, i.TO)
+    if dburi:
+        if persistent_deduplication:
+            connected, user_db = await connect_persistent_db(user_id, dburi)
+        else:
+            connected, user_db = await connect_user_db(user_id, dburi, i.TO)
+
         if not connected:
             await bot.send_message(user_id, "<code>ᴄᴀɴɴᴏᴛ ᴄᴏɴɴᴇᴄᴛ ᴛᴏ ʏᴏᴜʀ ᴅʙ. ᴅᴜᴘʟɪᴄᴀᴛᴇ ꜰɪʟᴇs ᴍᴀʏ ʙᴇ sᴋɪᴘᴘᴇᴅ ᴀꜰᴛᴇʀ ʀᴇsᴛᴀʀᴛ.</code>")
         else:
@@ -635,7 +652,7 @@ async def restart_pending_forwads(bot, user):
     except KeyError:
         start = None
     sts.add(time=True, start_time=start)
-    sleep = 1 if _bot['is_bot'] else 10
+    sleep = forwarding_speed
     temp.IS_FRWD_CHAT.append(i.TO)
 
     if user_id not in temp.lock:
@@ -649,7 +666,8 @@ async def restart_pending_forwads(bot, user):
       async for message in iter_messages(client, chat_id=sts.get("FROM"), limit=sts.get("limit"), offset=skiping, filters=filter, max_size=max_size):
             if await is_cancelled(client, user_id, sts, bot_id, _bot, from_chat, to_chat):
                 if user_have_db:
-                   await user_db.drop_all()
+                   if not persistent_deduplication:
+                       await user_db.drop_all()
                    await user_db.close()
                 return
             if pling %20 == 0:
@@ -677,6 +695,15 @@ async def restart_pending_forwads(bot, user):
                 fuid = getattr(media_obj, "file_unique_id", None)
             else:
                 media_obj = fname = fsize = fuid = None
+
+            if regex_filter and fname:
+                if regex_filter_mode == 'exclude' and re.search(regex_filter, fname):
+                    sts.add('filtered')
+                    continue
+                if regex_filter_mode == 'include' and not re.search(regex_filter, fname):
+                    sts.add('filtered')
+                    continue
+
             if media_obj and fname and await extension_filter(extensions, fname):
                sts.add('filtered')
                continue
@@ -687,12 +714,10 @@ async def restart_pending_forwads(bot, user):
                sts.add('filtered')
                continue
             
-            if user_have_db and datas['skip_duplicate'] and fuid:
+            if user_have_db and (datas['skip_duplicate'] or persistent_deduplication) and fuid:
                 if await user_db.is_file_exit(fuid):
                     sts.add('duplicate')
                     continue
-
-            if user_have_db and datas['skip_duplicate'] and fuid:
                 await user_db.add_file(fuid)
 
             if forward_tag:
@@ -707,6 +732,9 @@ async def restart_pending_forwads(bot, user):
                   MSG = []
             else:
                new_caption = custom_caption(message, caption)
+               if new_caption and message_replacements:
+                   for find, replace in message_replacements.items():
+                       new_caption = new_caption.replace(find, replace)
                details = {"msg_id": message.id, "media": media(message), "caption": new_caption, 'button': button, "protect": protect}
                await copy(user_id, client, details, bot_id, sts, _bot, from_chat, to_chat)
                sts.add('total_files')
@@ -714,7 +742,8 @@ async def restart_pending_forwads(bot, user):
     except Exception as e:
         await bot.send_message(user_id, f'<b>ᴇʀʀᴏʀ:</b>\n<code>{e}</code>')
         if user_have_db:
-            await user_db.drop_all()
+            if not persistent_deduplication:
+                await user_db.drop_all()
             await user_db.close()
         if sts.TO in temp.IS_FRWD_CHAT:
             temp.IS_FRWD_CHAT.remove(sts.TO)
@@ -725,7 +754,8 @@ async def restart_pending_forwads(bot, user):
         temp.IS_FRWD_CHAT.remove(sts.TO)
     await send(client, user_id, "<b>🎉 ғᴏʀᴡᴀᴅɪɴɢ ᴄᴏᴍᴘʟᴇᴛᴇᴅ</b>")
     if user_have_db:
-        await user_db.drop_all()
+        if not persistent_deduplication:
+            await user_db.drop_all()
         await user_db.close()
     await edit(user_id, bot_id, 'ᴄᴏᴍᴘʟᴇᴛᴇᴅ', "ᴄᴏᴍᴘʟᴇᴛᴇᴅ", sts, _bot, from_chat, to_chat)
     await stop(client, user_id, bot_id)

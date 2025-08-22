@@ -58,26 +58,37 @@ class STS:
     async def get_data(self, user_id):
         client_type = self.get('client_type')
         bot_id = self.get('bot_id')
+
         if client_type == 'bot':
             bot = await db.get_bot(user_id, bot_id)
         elif client_type == 'userbot':
             bot = await db.get_userbot(user_id, bot_id)
         else:
+            # Fallback to check both types if client_type is not specified
             bot = await db.get_bot(user_id, bot_id)
             if bot is None:
                 bot = await db.get_userbot(user_id, bot_id)
-        k, filters = self, await db.get_filters(user_id)
-        size, configs = None, await db.get_configs(user_id)
-        if configs['duplicate']:
-           duplicate = True
-        else:
-           duplicate = False
-        try:
-           min = configs['min_size']
-           max = configs['max_size']
-        except:
-           min = 0
-           max = 0
-        button = parse_buttons(configs['button'] if configs['button'] else '')
-        return bot, configs['caption'], configs['forward_tag'], {'filters': filters,
-                'keywords': configs['keywords'], 'min_size': min, 'max_size': max, 'extensions': configs['extension'], 'skip_duplicate': duplicate, 'db_uri': configs['db_uri']}, configs['protect'], button
+
+        configs = await db.get_configs(user_id)
+        filters = await db.get_filters(user_id)
+
+        # Prepare the button from the configuration
+        button = parse_buttons(configs.get('button') or '')
+
+        # Consolidate all settings into a single dictionary for clarity
+        forwarding_data = {
+            'filters': filters,
+            'skip_duplicate': configs.get('duplicate', True),
+            'db_uri': configs.get('db_uri'),
+            'min_size': configs.get('min_size', 0),
+            'max_size': configs.get('max_size', 0),
+            'keywords': configs.get('keywords'),
+            'extensions': configs.get('extension'),
+            # Premium features
+            'persistent_deduplication': configs.get('persistent_deduplication', False),
+            'regex_filter': configs.get('regex_filter'),
+            'regex_filter_mode': configs.get('regex_filter_mode', 'exclude'),
+            'message_replacements': configs.get('message_replacements')
+        }
+
+        return bot, configs.get('caption'), configs.get('forward_tag', False), forwarding_data, configs.get('protect'), button

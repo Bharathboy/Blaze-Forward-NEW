@@ -21,10 +21,10 @@ class Config:
         "default": 1
     }
     FORWARDING_SPEED = {
-        "gold": 0.5,      # 0.5 seconds delay
-        "silver": 1,        # 1 second delay
-        "bronze": 1.5,      # 1.5 seconds delay
-        "default": 2        # 2 seconds delay for free users
+        "gold": 0.8,      # 0.5 seconds delay
+        "silver": 0.83,        # 1 second delay
+        "bronze": 0.85,      # 1.5 seconds delay
+        "default": 0.85        # 2 seconds delay for free users
     }
 
 
