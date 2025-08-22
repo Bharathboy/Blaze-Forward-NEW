@@ -103,6 +103,7 @@ class Db:
                'sticker': True
             },
             'regex_filter': None,
+            'regex_filter_mode': 'exclude', # 'exclude' or 'include'
             'persistent_deduplication': False,
             'message_replacements': None
         }

@@ -73,10 +73,19 @@ async def pub_(bot, message):
         
         # Premium Features
         user_rank = await db.get_premium_user_rank(user)
+        if user_rank == "default":
+            # If user is not premium, disable premium features for this task
+            regex_filter = None
+            message_replacements = None
+            persistent_deduplication = False
+            regex_filter_mode = 'exclude'
+        else:
+            regex_filter = datas.get('regex_filter')
+            message_replacements = datas.get('message_replacements')
+            persistent_deduplication = datas.get('persistent_deduplication', False)
+            regex_filter_mode = datas.get('regex_filter_mode', 'exclude')
+
         forwarding_speed = Config.FORWARDING_SPEED.get(user_rank, Config.FORWARDING_SPEED["default"])
-        regex_filter = datas.get('regex_filter')
-        message_replacements = datas.get('message_replacements')
-        persistent_deduplication = datas.get('persistent_deduplication', False)
         
         filter = datas['filters']
         max_size = datas['max_size']
@@ -180,7 +189,10 @@ async def pub_(bot, message):
                 
                 # Regex Filter
                 if regex_filter and fname:
-                    if not re.search(regex_filter, fname):
+                    if regex_filter_mode == 'exclude' and re.search(regex_filter, fname):
+                        sts.add('filtered')
+                        continue
+                    if regex_filter_mode == 'include' and not re.search(regex_filter, fname):
                         sts.add('filtered')
                         continue
 
@@ -246,6 +258,7 @@ async def pub_(bot, message):
         if i: # Ensure 'i' was defined before the error
             await stop(client, user, i.bot_id)
         await message.answer("ᴀɴ ᴜɴᴇxᴘᴇᴄᴛᴇᴅ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ ᴀɴᴅ ᴛʜᴇ ᴛᴀsᴋ ᴡᴀs ᴄᴀɴᴄᴇʟʟᴇᴅ.", show_alert=True)
+
 
 async def copy(user_id, bot, msg, bot_id, sts, bot_info, from_chat, to_chat):
    try:

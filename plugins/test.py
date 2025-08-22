@@ -314,7 +314,7 @@ async def get_configs(user_id):
 
 async def update_configs(user_id, key, value):
   current = await db.get_configs(user_id)
-  if key in ['caption', 'duplicate', 'db_uri', 'forward_tag', 'protect', 'min_size', 'max_size', 'extension', 'keywords', 'button', 'regex_filter', 'persistent_deduplication', 'message_replacements']:
+  if key in ['caption', 'duplicate', 'db_uri', 'forward_tag', 'protect', 'min_size', 'max_size', 'extension', 'keywords', 'button', 'regex_filter', 'regex_filter_mode', 'persistent_deduplication', 'message_replacements']:
      current[key] = value
   else: 
      current['filters'][key] = value

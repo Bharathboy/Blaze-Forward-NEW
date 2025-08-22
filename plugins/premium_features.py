@@ -38,23 +38,36 @@ async def regex_filter_settings(client, query):
     
     user_id = query.from_user.id
     configs = await get_configs(user_id)
-    regex_filter = configs.get('regex_filter', None)
+    regex_filter = configs.get('regex_filter')
+    mode = configs.get('regex_filter_mode', 'exclude')
 
-    text = "**📜 Regex Filter**\n\n"
-    if regex_filter:
-        text += f"A regex filter is currently active."
+    text = f"**📜 Regex Filter**\n\n**Mode:** `{mode.title()}`\n"
+    if mode == 'exclude':
+        text += "Files matching the regex will be **excluded** (skipped)."
     else:
-        text += "You have not set a regex filter."
-
+        text += "Only files matching the regex will be **included** (forwarded)."
+    
     buttons = [
+        [InlineKeyboardButton(f"🔄 Mode: {'Include' if mode == 'exclude' else 'Exclude'}", callback_data='toggle_regex_mode')],
         [InlineKeyboardButton('✏️ Set/Edit Regex', callback_data='set_regex')],
     ]
     if regex_filter:
-        buttons[0].append(InlineKeyboardButton('👀 Show Regex', callback_data='show_regex'))
+        buttons[1].append(InlineKeyboardButton('👀 Show Regex', callback_data='show_regex'))
         buttons.append([InlineKeyboardButton('🗑️ Remove Regex', callback_data='remove_regex')])
 
     buttons.append([InlineKeyboardButton('⬅️ Back', callback_data='premium_features')])
     await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(buttons))
+
+@Client.on_callback_query(filters.regex(r'^toggle_regex_mode'))
+async def toggle_regex_mode(client, query):
+    if not await is_premium(query):
+        return
+    
+    user_id = query.from_user.id
+    configs = await get_configs(user_id)
+    new_mode = 'include' if configs.get('regex_filter_mode', 'exclude') == 'exclude' else 'exclude'
+    await update_configs(user_id, 'regex_filter_mode', new_mode)
+    await regex_filter_settings(client, query)
 
 @Client.on_callback_query(filters.regex(r'^set_regex'))
 async def set_regex_filter(client, query):
@@ -63,24 +76,52 @@ async def set_regex_filter(client, query):
     
     back_button = InlineKeyboardMarkup([[InlineKeyboardButton('⬅️ Back', callback_data='regex_filter')]])
     user_id = query.from_user.id
-    await query.message.edit_text("Please send me the regex pattern you want to use for filtering.")
     
-    while True:
-        response = await client.listen(user_id)
-        if response.text:
-            try:
-                re.compile(response.text)
-                await update_configs(user_id, 'regex_filter', response.text)
+    # --- ADD BETTER INSTRUCTIONS ---
+    await query.message.edit_text(
+        "Please send me the regex pattern you want to use for filtering.\n\n"
+        "**Tip:** A simple word is a valid pattern, but it's often too broad. "
+        "Consider using more specific patterns.\n\n"
+        "**Examples:**\n"
+        "- `^Start` - Matches messages that start with 'Start'.\n"
+        "- `\\d{10}` - Matches any 10-digit number.\n"
+        "- `word1|word2` - Matches messages containing either 'word1' or 'word2'.",
+        disable_web_page_preview=True
+    )
+    
+    response = await client.listen(user_id)
+    
+    if response.text:
+        pattern = response.text
+        # --- VALIDATION LOGIC ---
+        try:
+            re.compile(pattern)
+            
+            # Warn if the pattern is too simple (e.g., less than 3 chars and just letters/numbers)
+            if len(pattern) < 3 and pattern.isalnum():
                 await response.reply_text(
-                    f"✅ Regex filter has been set to:\n`{response.text}`",
-                    reply_markup=back_button
+                    f"⚠️ **Warning:** The pattern `{pattern}` is very simple and may match too many messages. "
+                    "Are you sure you want to set it?\n\n"
+                    "If this was a mistake, send a new pattern. Otherwise, send `/confirm` to use it anyway."
                 )
-                break
-            except re.error:
-                await response.reply_text("That is not a valid regex pattern. Please try again.")
-        else:
-            await response.reply_text("Invalid input. Please send a valid regex pattern.", reply_markup=back_button)
-            break
+                
+                # Wait for confirmation
+                confirm_response = await client.listen(user_id)
+                if not confirm_response.text or confirm_response.text.lower() != '/confirm':
+                    await confirm_response.reply_text("Regex filter cancelled. Please try setting it again.", reply_markup=back_button)
+                    return # Exit the function
+
+            # If validation passes or is confirmed, save the pattern
+            await update_configs(user_id, 'regex_filter', pattern)
+            await response.reply_text(
+                f"✅ Regex filter has been set to:\n`{pattern}`",
+                reply_markup=back_button
+            )
+            
+        except re.error as e:
+            await response.reply_text(f"❌ That is not a valid regex pattern.\n\n**Error:** `{e}`\nPlease try again.")
+    else:
+        await response.reply_text("Invalid input. Please send a text message.", reply_markup=back_button)
 
 @Client.on_callback_query(filters.regex(r'^show_regex'))
 async def show_regex_filter(client, query):
@@ -101,6 +142,7 @@ async def remove_regex_filter(client, query):
     user_id = query.from_user.id
     await update_configs(user_id, 'regex_filter', None)
     await query.message.edit_text("✅ Regex filter has been removed.", reply_markup=back_button)
+
 
 @Client.on_callback_query(filters.regex(r'^message_replacements'))
 async def message_replacements_settings(client, query):
