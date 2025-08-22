@@ -55,6 +55,18 @@ async def connect_user_db(user_id, uri, chat):
         print(e)
         return False, db
     return True, db
+
+async def connect_persistent_db(user_id, uri):
+    """Connects to a single, persistent collection for the user."""
+    collection_name = f"user_{user_id}_deduplication_log"
+    dbname = f"{user_id}-Forward-Bot-Permanent"
+    db = MongoDB(uri, dbname, collection_name)
+    try:
+        await db.connect()
+    except Exception as e:
+        print(e)
+        return False, db
+    return True, db
     
 # Don't Remove Credit Tg - @VJ_Botz
 # Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
