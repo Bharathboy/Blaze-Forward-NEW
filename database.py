@@ -101,11 +101,19 @@ class Db:
                'document': True,
                'animation': True,
                'sticker': True
-            }
+            },
+            'regex_filter': None,
+            'persistent_deduplication': False,
+            'message_replacements': None
         }
         user = await self.col.find_one({'id':int(id)})
         if user:
-            return user.get('configs', default)
+            user_configs = user.get('configs', {})
+            # Ensure new keys exist
+            for key, value in default.items():
+                if key not in user_configs:
+                    user_configs[key] = value
+            return user_configs
         return default
 
     async def add_bot(self, datas):
@@ -169,9 +177,9 @@ class Db:
 
     async def get_filters(self, user_id):
        filters = []
-       filter = (await self.get_configs(user_id))['filters']
-       for k, v in filter.items():
-          if v == False:
+       filter_dict = (await self.get_configs(user_id))['filters']
+       for k, v in filter_dict.items():
+          if not v:
             filters.append(str(k))
        return filters
 

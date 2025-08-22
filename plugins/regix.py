@@ -70,6 +70,14 @@ async def pub_(bot, message):
         m = await msg_edit(message.message, "<code>ᴠᴇʀɪꜰʏɪɴɢ ʏᴏᴜʀ ᴅᴀᴛᴀ, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ...</code>")
         temp.ACTIVE_STATUS_MSGS.setdefault(user, {})[i.bot_id] = m
         _bot, caption, forward_tag, datas, protect, button = await sts.get_data(user)
+        
+        # Premium Features
+        user_rank = await db.get_premium_user_rank(user)
+        forwarding_speed = Config.FORWARDING_SPEED.get(user_rank, Config.FORWARDING_SPEED["default"])
+        regex_filter = datas.get('regex_filter')
+        message_replacements = datas.get('message_replacements')
+        persistent_deduplication = datas.get('persistent_deduplication', False)
+        
         filter = datas['filters']
         max_size = datas['max_size']
         min_size = datas['min_size']
@@ -133,7 +141,7 @@ async def pub_(bot, message):
         await send(client, user, Script.FORWARD_START_TXT.format(_bot['id'], _bot['name'], from_chat.title, to_chat.title))
 
         sts.add(time=True)
-        sleep = 1 if _bot['is_bot'] else 10
+        sleep = forwarding_speed
         await msg_edit(m, "<code>ᴘʀᴏᴄᴇssɪɴɢ...</code>")
         temp.IS_FRWD_CHAT.append(i.TO)
 
@@ -169,6 +177,12 @@ async def pub_(bot, message):
                     fname = getattr(media_obj, "file_name", None)
                     fsize = getattr(media_obj, "file_size", None)
                     fuid = getattr(media_obj, "file_unique_id", None)
+                
+                # Regex Filter
+                if regex_filter and fname:
+                    if not re.search(regex_filter, fname):
+                        sts.add('filtered')
+                        continue
 
                 if media_obj and fname and await extension_filter(extensions, fname):
                     sts.add('filtered')
@@ -180,12 +194,10 @@ async def pub_(bot, message):
                     sts.add('filtered')
                     continue
 
-                if user_have_db and datas['skip_duplicate'] and fuid:
+                if (user_have_db and datas['skip_duplicate']) or persistent_deduplication and fuid:
                     if await user_db.is_file_exit(fuid):
                         sts.add('duplicate')
                         continue
-
-                if user_have_db and datas['skip_duplicate'] and fuid:
                     await user_db.add_file(fuid)
 
                 if forward_tag:
@@ -199,6 +211,12 @@ async def pub_(bot, message):
                         MSG = []
                 else:
                     new_caption = custom_caption(message, caption)
+                    
+                    # Message Replacements
+                    if new_caption and message_replacements:
+                        for find, replace in message_replacements.items():
+                            new_caption = new_caption.replace(find, replace)
+
                     details = {"msg_id": message.id, "media": media(message), "caption": new_caption, 'button': button, "protect": protect}
                     await copy(user, client, details, i.bot_id, sts, _bot, from_chat, to_chat)
                     sts.add('total_files')
@@ -228,7 +246,6 @@ async def pub_(bot, message):
         if i: # Ensure 'i' was defined before the error
             await stop(client, user, i.bot_id)
         await message.answer("ᴀɴ ᴜɴᴇxᴘᴇᴄᴛᴇᴅ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ ᴀɴᴅ ᴛʜᴇ ᴛᴀsᴋ ᴡᴀs ᴄᴀɴᴄᴇʟʟᴇᴅ.", show_alert=True)
-
 
 async def copy(user_id, bot, msg, bot_id, sts, bot_info, from_chat, to_chat):
    try:

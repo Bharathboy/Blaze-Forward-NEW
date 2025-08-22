@@ -10,10 +10,12 @@ CLIENT = CLIENT()
 
 @Client.on_message(filters.command('settings'))
 async def settings(client, message):
-   await message.reply_text(
-     "<b>Hᴇʀᴇ Is Tʜᴇ Sᴇᴛᴛɪɴɢs Pᴀɴᴇʟ⚙\n\nᴄʜᴀɴɢᴇ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs ᴀs ʏᴏᴜʀ ᴡɪsʜ 👇</b>",
-     reply_markup=main_buttons()
-     )
+    user_id = message.from_user.id
+    buttons = await main_buttons(user_id)
+    await message.reply_text(
+      "<b>Hᴇʀᴇ Is Tʜᴇ Sᴇᴛᴛɪɴɢs Pᴀɴᴇʟ⚙\n\nᴄʜᴀɴɢᴇ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs ᴀs ʏᴏᴜʀ ᴡɪsʜ 👇</b>",
+      reply_markup=buttons
+      )
 
 @Client.on_callback_query(filters.regex(r'^settings'))
 async def settings_query(bot, query):
@@ -21,9 +23,10 @@ async def settings_query(bot, query):
   i, type = query.data.split("#")
   buttons = [[InlineKeyboardButton('back', callback_data="settings#main")]]
   if type=="main":
-     await query.message.edit_text(
-       "<b>Hᴇʀᴇ Is Tʜᴇ Sᴇᴛᴛɪɴɢs Pᴀɴᴇʟ⚙\n\nᴄʜᴀɴɢᴇ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs ᴀs ʏᴏᴜʀ ᴡɪsʜ 👇</b>",
-       reply_markup=main_buttons())
+      main_btns = await main_buttons(user_id)
+      await query.message.edit_text(
+        "<b>Hᴇʀᴇ Is Tʜᴇ Sᴇᴛᴛɪɴɢs Pᴀɴᴇʟ⚙\n\nᴄʜᴀɴɢᴇ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs ᴀs ʏᴏᴜʀ ᴡɪsʜ 👇</b>",
+        reply_markup=main_btns)
   elif type=="extra":
        await query.message.edit_text(
          "<b>Hᴇʀᴇ Is Tʜᴇ Exᴛʀᴀ Sᴇᴛᴛɪɴɢs Pᴀɴᴇʟ⚙</b>",
@@ -480,8 +483,7 @@ def extra_buttons():
                     callback_data=f'settings#main')
        ]]
    return InlineKeyboardMarkup(buttons)
-
-def main_buttons():
+async def main_buttons(user_id):
   buttons = [[
        InlineKeyboardButton('🤖 Bᴏᴛs',
                     callback_data=f'settings#bots'),
@@ -500,12 +502,13 @@ def main_buttons():
        ],[
        InlineKeyboardButton('Exᴛʀᴀ Sᴇᴛᴛɪɴɢs 🧪',
                     callback_data=f'settings#extra')
-       ],[
-       InlineKeyboardButton('⫷ Bᴀᴄᴋ',
-                    callback_data=f'help')
        ]]
-  return InlineKeyboardMarkup(buttons)
+  
+  buttons.append([InlineKeyboardButton('💎 Premium Features 💎', callback_data='premium_features')])
 
+  buttons.append([InlineKeyboardButton('⫷ Bᴀᴄᴋ', callback_data=f'help')])
+  return InlineKeyboardMarkup(buttons)
+  
 def size_limit(limit):
    if str(limit) == "None":
       return None, ""

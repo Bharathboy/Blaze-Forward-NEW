@@ -13,16 +13,18 @@ class Config:
     BOT_SESSION = environ.get("BOT_SESSION", "Auto_Forward")
     DATABASE_URI = environ.get("DATABASE_URI", "")
     DATABASE_NAME = environ.get("DATABASE_NAME", "")
-    PREMIUM_USERS = {
-    634637418: "gold",
-    987654321: "silver",
-    654321098: "bronze"
-    }
+    PREMIUM_USERS = {}
     TASK_LIMITS = {
         "gold": 4,
         "silver": 3,
         "bronze": 2,
         "default": 1
+    }
+    FORWARDING_SPEED = {
+        "gold": 0.5,      # 0.5 seconds delay
+        "silver": 1,        # 1 second delay
+        "bronze": 1.5,      # 1.5 seconds delay
+        "default": 2        # 2 seconds delay for free users
     }
 
 
