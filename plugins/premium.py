@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 from pyrogram import Client, filters
 from config import Config
 from database import db
+from script import Script
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 def get_user_id(message):
     if message.reply_to_message:
@@ -50,17 +52,14 @@ def format_timedelta(td):
     days = td.days
     hours, remainder = divmod(td.seconds, 3600)
     minutes, _ = divmod(remainder, 60)
-    seconds, _ = divmod(remainder, 1)
     
     parts = []
     if days > 0:
-        parts.append(f"{days}d")
+        parts.append(f"{days} day(s)")
     if hours > 0:
-        parts.append(f"{hours}h")
+        parts.append(f"{hours} hour(s)")
     if minutes > 0:
-        parts.append(f"{minutes}m")
-    if seconds > 0:
-        parts.append(f"{seconds}s")
+        parts.append(f"{minutes} minute(s)")
         
     return ", ".join(parts) if parts else "Less than a minute"
 
@@ -87,7 +86,7 @@ async def add_premium(client, message):
             f"🎉 **Congratulations!** 🎉\n\n"
             f"You have been upgraded to the **{rank.title()}** premium plan!\n\n"
             f"**Your benefits:**\n"
-            f"- You can now run up to **{task_limit}** concurrent tasks.\n\n"
+            f"- You can now run up to **{task_limit}** Forward Tasks.\n\n"
             f"This plan is valid **{expiry_text}**."
         )
         await client.send_message(user_id, user_notification)
@@ -142,7 +141,27 @@ async def my_plan(client, message):
     plan_details = (
         f"📋 **Your Plan Details** 📋\n\n"
         f"**Plan:** `{rank.title()}`\n"
-        f"**Concurrent Tasks:** `{task_limit}`\n\n"
+        f"**Forward Tasks:** `{task_limit}`\n\n"
         f"{expiry_str}"
     )
     await message.reply_text(plan_details)
+
+@Client.on_message(filters.command("plans"))
+async def show_plans(client, message):
+    """Shows available premium plans."""
+    plans_text = Script.PLANS_TXT.format(
+        bronze_limit=Config.TASK_LIMITS.get("bronze", "N/A"),
+        silver_limit=Config.TASK_LIMITS.get("silver", "N/A"),
+        gold_limit=Config.TASK_LIMITS.get("gold", "N/A"),
+        default_limit=Config.TASK_LIMITS.get("default", "N/A")
+    )
+    
+    buttons = [[
+        InlineKeyboardButton('Contact Owner to Upgrade 👑', url=f'tg://user?id={Config.BOT_OWNER}')
+    ]]
+    
+    await message.reply_text(
+        plans_text,
+        reply_markup=InlineKeyboardMarkup(buttons),
+        disable_web_page_preview=True
+    )

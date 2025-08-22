@@ -16,7 +16,9 @@ class Script(object):
 ⏣ __ /settings - ᴄᴏɴꜰɪɢᴜʀᴇ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs__
 ⏣ __ /unequify - ᴅᴇʟᴇᴛᴇ ᴅᴜᴘʟɪᴄᴀᴛᴇ ᴍᴇᴅɪᴀ ᴍᴇssᴀɢᴇs ɪɴ ᴄʜᴀᴛs__
 ⏣ __ /stop - sᴛᴏᴘ ʏᴏᴜʀ ᴏɴɢᴏɪɴɢ ᴛᴀsᴋs__
-⏣ __ /reset - ʀᴇsᴇᴛ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs__</b>
+⏣ __ /reset - ʀᴇsᴇᴛ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs__
+⏣ __ /my_plan - ᴄʜᴇᴄᴋ ʏᴏᴜʀ ᴄᴜʀʀᴇɴᴛ ᴘʟᴀɴ__
+⏣ __ /plans - sᴇᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs__</b>
 
 <b><u>💢 ꜰᴇᴀᴛᴜʀᴇs:</b></u>
 <b>► __ꜰᴏʀᴡᴀʀᴅ ᴍᴇssᴀɢᴇ ꜰʀᴏᴍ ᴘᴜʙʟɪᴄ ᴄʜᴀɴɴᴇʟ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴡɪᴛʜᴏᴜᴛ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ. ɪꜰ ᴛʜᴇ ᴄʜᴀɴɴᴇʟ ɪs ᴘʀɪᴠᴀᴛᴇ ɴᴇᴇᴅ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ, ɪꜰ ʏᴏᴜ ᴄᴀɴ'ᴛ ɢɪᴠᴇ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ ᴛʜᴇɴ ᴜsᴇ ᴜsᴇʀʙᴏᴛ, ʙᴜᴛ ɪɴ ᴜsᴇʀʙᴏᴛ ᴛʜᴇʀᴇ ɪs ᴀ ᴄʜᴀɴᴄᴇ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ ʙᴀɴ sᴏ ᴜsᴇ ꜰᴀᴋᴇ ᴀᴄᴄᴏᴜɴᴛ__
@@ -26,6 +28,26 @@ class Script(object):
 ► __ꜰɪʟᴛᴇʀ ᴛʏᴘᴇ ᴏꜰ ᴍᴇssᴀɢᴇs__</b>
 """
   
+  PLANS_TXT = """<b>🌟 ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs 🌟</b>
+
+Here are the available plans to enhance your experience. Contact the bot owner to upgrade!
+
+🥉 **Bronze Plan**
+- **Price:** Contact Owner
+- **Forward Tasks:** `{bronze_limit}`
+
+🥈 **Silver Plan**
+- **Price:** Contact Owner
+- **Forward Tasks:** `{silver_limit}`
+
+🥇 **Gold Plan**
+- **Price:** Contact Owner
+- **Forward Tasks:** `{gold_limit}`
+
+**Free Plan:**
+- **Forward Tasks:** `{default_limit}`
+"""
+
   HOW_USE_TXT = """<b><u>⚠️ ʙᴇꜰᴏʀᴇ ꜰᴏʀᴡᴀʀᴅɪɴɢ:</b></u>
 <b>► __ᴀᴅᴅ ᴀ ʙᴏᴛ ᴏʀ ᴜsᴇʀʙᴏᴛ__
 ► __ᴀᴅᴅ ᴀᴛʟᴇᴀsᴛ ᴏɴᴇ ᴛᴏ ᴄʜᴀɴɴᴇʟ__ `(ʏᴏᴜʀ ʙᴏᴛ/ᴜsᴇʀʙᴏᴛ ᴍᴜsᴛ ʙᴇ ᴀᴅᴍɪɴ ɪɴ ᴛʜᴇʀᴇ)`
