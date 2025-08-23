@@ -16,6 +16,7 @@ class Script(object):
 ⏣ __ /settings - ᴄᴏɴꜰɪɢᴜʀᴇ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs__
 ⏣ __ /unequify - ᴅᴇʟᴇᴛᴇ ᴅᴜᴘʟɪᴄᴀᴛᴇ ᴍᴇᴅɪᴀ ᴍᴇssᴀɢᴇs ɪɴ ᴄʜᴀᴛs__
 ⏣ __ /stop - sᴛᴏᴘ ʏᴏᴜʀ ᴏɴɢᴏɪɴɢ ᴛᴀsᴋs__
+⏣ __ /ongoing - sᴇᴇ ᴏɴɢᴏɪɴɢ ғᴏʀᴡᴀʀᴅ sᴛᴀᴛᴜs__
 ⏣ __ /reset - ʀᴇsᴇᴛ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs__
 ⏣ __ /my_plan - ᴄʜᴇᴄᴋ ʏᴏᴜʀ ᴄᴜʀʀᴇɴᴛ ᴘʟᴀɴ__
 ⏣ __ /plans - sᴇᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs__
@@ -78,8 +79,8 @@ Here are the available plans to enhance your experience. Contact the bot owner t
   ABOUT_TXT = """<b>━━━━━ ❰ ꜰᴏʀᴡᴀʀᴅ ʙᴏᴛ ❱ ━━━━━
 
 📃ʙᴏᴛ : [ꜰᴏʀᴡᴀʀᴅ ʙᴏᴛ](https://t.me/Blaze_forward_bot)
-👦ᴄʀᴇᴀᴛᴏʀ : [ᴋɪɴɢ ᴠᴊ 👑](https://t.me/bharath_boy)
-🤖ᴜᴘᴅᴀᴛᴇ : [ᴠᴊ ʙᴏᴛᴢ](https://t.me/filmztube)
+👦ᴄʀᴇᴀᴛᴏʀ : [ᴄʟɪᴄᴋ ʜᴇʀᴇ 👑](https://t.me/bharath_boy)
+🤖ᴜᴘᴅᴀᴛᴇ : [ᴄʟɪᴄᴋ ʜᴇʀᴇ](https://t.me/filmztube)
 📡ʜᴏsᴛᴇᴅ ᴏɴ : sᴜᴘᴇʀ ꜰᴀsᴛ
 🗣️ʟᴀɴɢᴜᴀɢᴇ : ᴘʏᴛʜᴏɴ3
 📚ʟɪʙʀᴀʀʏ : ᴘʏʀᴏғᴏʀᴋ 2.3.68
