@@ -1,6 +1,4 @@
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
+
 
 import asyncio, logging
 logging.basicConfig(
@@ -20,9 +18,7 @@ from logging.handlers import RotatingFileHandler
 from plugins.regix import restart_forwards
 from database import db
 
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01
+
 
 
 async def check_expired_premiums(client):
@@ -110,6 +106,3 @@ if __name__ == "__main__":
 
     asyncio.get_event_loop().run_until_complete(main())
 
-# Don't Remove Credit Tg - @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot https://youtube.com/@Tech_VJ
-# Ask Doubt on telegram @KingVJ01

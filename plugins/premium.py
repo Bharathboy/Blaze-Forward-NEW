@@ -117,7 +117,7 @@ async def my_plan(client, message):
     
     if not user_plan:
         default_limit = Config.TASK_LIMITS["default"]
-        return await message.reply_text(f"You are currently on the **Free** plan.\n- You can run **{default_limit}** concurrent task(s).")
+        return await message.reply_text(f"You are currently on the **Free** plan.\n- You can run **{default_limit}** forward task(s).")
 
     rank = user_plan.get('rank', 'default')
     expiry_time = user_plan.get('expiry_time')

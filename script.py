@@ -11,21 +11,30 @@ class Script(object):
   HELP_TXT = """<b><u>🔆 ʜᴇʟᴘ</b></u>
 
 <u>**📚 ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs:**</u>
-<b>⏣ __ /start - ᴄʜᴇᴄᴋ ɪ'ᴍ ᴀʟɪᴠᴇ__ 
+⏣ __ /start - ᴄʜᴇᴄᴋ ɪ'ᴍ ᴀʟɪᴠᴇ__ 
 ⏣ __ /forward - ꜰᴏʀᴡᴀʀᴅ ᴍᴇssᴀɢᴇs__
 ⏣ __ /settings - ᴄᴏɴꜰɪɢᴜʀᴇ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs__
 ⏣ __ /unequify - ᴅᴇʟᴇᴛᴇ ᴅᴜᴘʟɪᴄᴀᴛᴇ ᴍᴇᴅɪᴀ ᴍᴇssᴀɢᴇs ɪɴ ᴄʜᴀᴛs__
 ⏣ __ /stop - sᴛᴏᴘ ʏᴏᴜʀ ᴏɴɢᴏɪɴɢ ᴛᴀsᴋs__
 ⏣ __ /reset - ʀᴇsᴇᴛ ʏᴏᴜʀ sᴇᴛᴛɪɴɢs__
 ⏣ __ /my_plan - ᴄʜᴇᴄᴋ ʏᴏᴜʀ ᴄᴜʀʀᴇɴᴛ ᴘʟᴀɴ__
-⏣ __ /plans - sᴇᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs__</b>
+⏣ __ /plans - sᴇᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs__
+⏣ __ /add_premium - (ᴏᴡɴᴇʀ) ᴀᴅᴅ ᴜsᴇʀ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ__
+⏣ __ /remove_premium - (ᴏᴡɴᴇʀ) ʀᴇᴍᴏᴠᴇ ᴜsᴇʀ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ__
 
 <b><u>💢 ꜰᴇᴀᴛᴜʀᴇs:</b></u>
-<b>► __ꜰᴏʀᴡᴀʀᴅ ᴍᴇssᴀɢᴇ ꜰʀᴏᴍ ᴘᴜʙʟɪᴄ ᴄʜᴀɴɴᴇʟ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴡɪᴛʜᴏᴜᴛ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ. ɪꜰ ᴛʜᴇ ᴄʜᴀɴɴᴇʟ ɪs ᴘʀɪᴠᴀᴛᴇ ɴᴇᴇᴅ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ, ɪꜰ ʏᴏᴜ ᴄᴀɴ'ᴛ ɢɪᴠᴇ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ ᴛʜᴇɴ ᴜsᴇ ᴜsᴇʀʙᴏᴛ, ʙᴜᴛ ɪɴ ᴜsᴇʀʙᴏᴛ ᴛʜᴇʀᴇ ɪs ᴀ ᴄʜᴀɴᴄᴇ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ ʙᴀɴ sᴏ ᴜsᴇ ꜰᴀᴋᴇ ᴀᴄᴄᴏᴜɴᴛ__
+<b>► __ꜰᴏʀᴡᴀʀᴅ ᴍᴇssᴀɢᴇ ꜰʀᴏᴍ ᴘᴜʙʟɪᴄ ᴄʜᴀɴɴᴇʟ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴡɪᴛʜᴏᴜᴛ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ. ɪꜰ ᴛʜᴇ ᴄʜᴀɴɴᴇʟ ɪs ᴘʀɪᴠᴀᴛᴇ ɴᴇᴇᴅ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ, ɪꜰ ʏᴏᴜ ᴄᴀɴ'ᴛ ɢɪᴠᴇ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ ᴛʜᴇɴ ᴜsᴇ ᴜsᴇʀʙᴏᴛ, ʙᴜᴛ ɪɴ ᴜsᴇʀʙᴏᴛ ᴛʜᴇʀᴇ ɪs ᴀ ᴄʜᴀɴᴄᴇ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ ʙᴀɴ sᴏ ᴜsᴇ ꜰᴀᴋᴇ ᴀᴄᴄᴏᴜɴᴛ__</b>
 ► __ᴄᴜsᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ__
 ► __ᴄᴜsᴛᴏᴍ ʙᴜᴛᴛᴏɴ__
 ► __sᴋɪᴘ ᴅᴜᴘʟɪᴄᴀᴛᴇ ᴍᴇssᴀɢᴇs__
-► __ꜰɪʟᴛᴇʀ ᴛʏᴘᴇ ᴏꜰ ᴍᴇssᴀɢᴇs__</b>
+► __ꜰɪʟᴛᴇʀ ᴛʏᴘᴇ ᴏꜰ ᴍᴇssᴀɢᴇs__
+
+<b><u>🌟 ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇs:</b></u>
+► __Rᴇɢᴇx ʙᴀsᴇᴅ ғɪʟᴛᴇʀɪɴɢ__
+► __ᴄᴀᴘᴛɪᴏɴ ᴡᴏʀᴅ ʀᴇᴘʟᴀᴄᴇᴍᴇɴᴛ__
+► __ᴘᴇʀsɪsᴛᴇɴᴛ sᴋɪᴘ ᴅᴜᴘʟɪᴄᴀᴛɪᴏɴ__
+
+
 """
   
   PLANS_TXT = """<b>🌟 ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs 🌟</b>
@@ -33,19 +42,30 @@ class Script(object):
 Here are the available plans to enhance your experience. Contact the bot owner to upgrade!
 
 🥉 **Bronze Plan**
-- **Price:** Contact Owner
+- **Price:** 30₹
 - **Forward Tasks:** `{bronze_limit}`
+- **Forward Speed:** `Normal`
+- **Premium Features:** `Included`
+- **Premium Duration:** `30 days`
 
 🥈 **Silver Plan**
-- **Price:** Contact Owner
+- **Price:** 50₹
 - **Forward Tasks:** `{silver_limit}`
+- **Forward Speed:** `Slightly Fast`
+- **Premium Features:** `Included`
+- **Premium Duration:** `45 days`
 
 🥇 **Gold Plan**
-- **Price:** Contact Owner
+- **Price:** 70₹
 - **Forward Tasks:** `{gold_limit}`
+- **Forward Speed:** `Fast`
+- **Premium Features:** `Included`
+- **Premium Duration:** `60 days`
 
 **Free Plan:**
 - **Forward Tasks:** `{default_limit}`
+- **Forward Speed:** `Normal`
+- **Premium Features:** `Not Included`
 """
 
   HOW_USE_TXT = """<b><u>⚠️ ʙᴇꜰᴏʀᴇ ꜰᴏʀᴡᴀʀᴅɪɴɢ:</b></u>
@@ -53,19 +73,17 @@ Here are the available plans to enhance your experience. Contact the bot owner t
 ► __ᴀᴅᴅ ᴀᴛʟᴇᴀsᴛ ᴏɴᴇ ᴛᴏ ᴄʜᴀɴɴᴇʟ__ `(ʏᴏᴜʀ ʙᴏᴛ/ᴜsᴇʀʙᴏᴛ ᴍᴜsᴛ ʙᴇ ᴀᴅᴍɪɴ ɪɴ ᴛʜᴇʀᴇ)`
 ► __ʏᴏᴜ ᴄᴀɴ ᴀᴅᴅ ᴄʜᴀᴛs ᴏʀ ʙᴏᴛs ʙʏ ᴜsɪɴɢ /sᴇᴛᴛɪɴɢs__
 ► __ɪꜰ ᴛʜᴇ **ꜰʀᴏᴍ ᴄʜᴀɴɴᴇʟ** ɪs ᴘʀɪᴠᴀᴛᴇ ʏᴏᴜʀ ᴜsᴇʀʙᴏᴛ ᴍᴜsᴛ ʙᴇ ᴍᴇᴍʙᴇʀ ɪɴ ᴛʜᴇʀᴇ ᴏʀ ʏᴏᴜʀ ʙᴏᴛ ᴍᴜsᴛ ɴᴇᴇᴅ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ ɪɴ ᴛʜᴇʀᴇ ᴀʟsᴏ__
-► __ᴛʜᴇɴ ᴜsᴇ /ꜰᴏʀᴡᴀʀᴅ ᴛᴏ ꜰᴏʀᴡᴀʀᴅ ᴍᴇssᴀɢᴇs__
-
-► ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ [ᴛᴜᴛᴏʀɪᴀʟ ᴠɪᴅᴇᴏ](https://youtu.be/wO1FE-lf35I)</b>"""
+► __ᴛʜᴇɴ ᴜsᴇ /ꜰᴏʀᴡᴀʀᴅ ᴛᴏ ꜰᴏʀᴡᴀʀᴅ ᴍᴇssᴀɢᴇs__</b>"""
   
   ABOUT_TXT = """<b>━━━━━ ❰ ꜰᴏʀᴡᴀʀᴅ ʙᴏᴛ ❱ ━━━━━
 
-📃ʙᴏᴛ : [ꜰᴏʀᴡᴀʀᴅ ʙᴏᴛ](https://t.me/VJForwardBot)
-👦ᴄʀᴇᴀᴛᴏʀ : [ᴋɪɴɢ ᴠᴊ 👑](https://t.me/kingvj01)
-🤖ᴜᴘᴅᴀᴛᴇ : [ᴠᴊ ʙᴏᴛᴢ](https://t.me/vj_botz)
+📃ʙᴏᴛ : [ꜰᴏʀᴡᴀʀᴅ ʙᴏᴛ](https://t.me/Blaze_forward_bot)
+👦ᴄʀᴇᴀᴛᴏʀ : [ᴋɪɴɢ ᴠᴊ 👑](https://t.me/bharath_boy)
+🤖ᴜᴘᴅᴀᴛᴇ : [ᴠᴊ ʙᴏᴛᴢ](https://t.me/filmztube)
 📡ʜᴏsᴛᴇᴅ ᴏɴ : sᴜᴘᴇʀ ꜰᴀsᴛ
 🗣️ʟᴀɴɢᴜᴀɢᴇ : ᴘʏᴛʜᴏɴ3
-📚ʟɪʙʀᴀʀʏ : ᴘʏʀᴏɢʀᴀᴍ ɢᴀᴛʜᴇʀ 2.11.0 
-🗒️ᴠᴇʀsɪᴏɴ : 0.18.3
+📚ʟɪʙʀᴀʀʏ : ᴘʏʀᴏғᴏʀᴋ 2.3.68
+🗒️ᴠᴇʀsɪᴏɴ : BETA
 ━━━━━━━━━━━━━━━
 </b>"""
 

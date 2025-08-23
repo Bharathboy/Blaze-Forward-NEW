@@ -134,7 +134,7 @@ async def forward_command(bot: Client, message):
 
     if active_tasks >= task_limit:
         return await message.reply_text(
-            f"ʏᴏᴜ ʜᴀᴠᴇ ʀᴇᴀᴄʜᴇᴅ ʏᴏᴜʀ ᴍᴀxɪᴍᴜᴍ ʟɪᴍɪᴛ ᴏꜰ {task_limit} ᴄᴏɴᴄᴜʀʀᴇɴᴛ ᴛᴀsᴋs. ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ꜰᴏʀ ʏᴏᴜʀ ᴏᴛʜᴇʀ ᴛᴀsᴋs ᴛᴏ ᴄᴏᴍᴘʟᴇᴛᴇ."
+            f"ʏᴏᴜ ʜᴀᴠᴇ ʀᴇᴀᴄʜᴇᴅ ʏᴏᴜʀ ᴍᴀxɪᴍᴜᴍ ʟɪᴍɪᴛ ᴏꜰ {task_limit} ғᴏʀᴡᴀʀᴅ ᴛᴀsᴋs. ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ꜰᴏʀ ʏᴏᴜʀ ᴏᴛʜᴇʀ ᴛᴀsᴋs ᴛᴏ ᴄᴏᴍᴘʟᴇᴛᴇ ᴏʀ ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ, sᴇᴇ /plans"
         )
 
     # reset any previous session
