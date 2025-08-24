@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import random
 import re
 from pyrogram import Client, filters
 from pyrogram.errors import FloodWait
@@ -21,6 +22,34 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 PROCESSING = set()
+
+async def forward_message_with_retry(message, to_chat_id, configs, new_caption, message_replacements):
+    """
+    Forwards or copies a message with a retry mechanism for FloodWait errors.
+    """
+    # Add a random delay between 1 and 3 seconds
+    await asyncio.sleep(random.uniform(1, 3))
+    
+    try:
+        if configs.get('forward_tag'):
+            await message.forward(to_chat_id, protect_content=configs.get('protect', False))
+        else:
+            if new_caption and message_replacements:
+                for find, replace in message_replacements.items():
+                    new_caption = new_caption.replace(find, replace)
+
+            await message.copy(
+                chat_id=to_chat_id,
+                caption=new_caption if new_caption is not None else (message.caption or ""),
+                reply_markup=parse_buttons(configs.get('button') or ''),
+                protect_content=configs.get('protect', False)
+            )
+    except FloodWait as e:
+        logger.warning(f"FloodWait error when forwarding message {message.id}. Waiting for {e.value} seconds.")
+        await asyncio.sleep(e.value)
+        # Retry the action after waiting
+        await forward_message_with_retry(message, to_chat_id, configs, new_caption, message_replacements)
+
 
 async def live_forward_handler(client, message):
     if message.chat.id not in Config.LIVE_FORWARD_CONFIG:
@@ -101,24 +130,10 @@ async def live_forward_handler(client, message):
                     await user_db.add_file(fuid)
                     await user_db.close()
         
-        # --- Simplified Forwarding Logic ---
-        if configs.get('forward_tag'):
-            await message.forward(to_chat_id, protect_content=configs.get('protect', False))
-        else:
-            new_caption = custom_caption(message, configs.get('caption'))
-            if new_caption and message_replacements:
-                for find, replace in message_replacements.items():
-                    new_caption = new_caption.replace(find, replace)
-            
-            await message.copy(
-                chat_id=to_chat_id,
-                caption=new_caption if new_caption is not None else (message.caption or ""),
-                reply_markup=parse_buttons(configs.get('button') or ''),
-                protect_content=configs.get('protect', False)
-            )
+        # --- Improved Forwarding Logic with Retry ---
+        new_caption = custom_caption(message, configs.get('caption'))
+        await forward_message_with_retry(message, to_chat_id, configs, new_caption, message_replacements)
 
-    except FloodWait as e:
-        await asyncio.sleep(e.value)
     except Exception as e:
         logging.error(f"Error in live forward handler for message {message.id} in chat {message.chat.id}: {e}", exc_info=True)
     finally:
