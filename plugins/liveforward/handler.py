@@ -6,7 +6,7 @@ from pyrogram.errors import FloodWait
 
 from config import Config
 from database import db
-# FIX: Change imports to be relative to the parent 'plugins' directory
+# Corrected: Use relative imports to access sibling plugin modules
 from ..db import connect_user_db, connect_persistent_db
 from ..regix import (
     custom_caption,
@@ -22,10 +22,9 @@ logger.setLevel(logging.INFO)
 
 PROCESSING = set()
 
-# This function is now a regular async function, not a handler itself.
-# It will be registered as a handler dynamically in main.py.
+# This is now a regular function, not a decorated handler.
+# It's called by the MessageHandler we set up in main.py.
 async def live_forward_handler(client, message):
-    print("live_forward_handler called chat id:", message.chat.id)
     if message.chat.id not in Config.LIVE_FORWARD_CONFIG:
         return
 
@@ -38,10 +37,8 @@ async def live_forward_handler(client, message):
         config = Config.LIVE_FORWARD_CONFIG[message.chat.id]
         user_id = config["user_id"]
         
-        # Fetch user-specific settings
         configs = await db.get_configs(user_id)
         
-        # --- Start Filtering ---
         if (message.text and not configs.get('filters', {}).get('text', True)) or \
            (message.document and not configs.get('filters', {}).get('document', True)) or \
            (message.video and not configs.get('filters', {}).get('video', True)) or \
@@ -131,7 +128,6 @@ async def live_forward_handler(client, message):
                     reply_markup=parse_buttons(configs.get('button') or ''),
                     protect_content=configs.get('protect', False)
                 )
-
     except FloodWait as e:
         await asyncio.sleep(e.value)
     except Exception as e:
