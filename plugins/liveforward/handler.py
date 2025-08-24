@@ -23,6 +23,7 @@ logger.setLevel(logging.INFO)
 PROCESSING = set()
 
 async def live_forward_handler(client, message):
+    print("chat name and msg id is", message.chat.id, message.id)
     if message.chat.id not in Config.LIVE_FORWARD_CONFIG:
         return
 
