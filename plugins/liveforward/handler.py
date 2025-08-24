@@ -4,7 +4,7 @@ import re
 from pyrogram import Client, filters
 from pyrogram.errors import FloodWait
 
-from config import Config
+from config import Config, temp
 from database import db
 # Corrected: Use relative imports to access sibling plugin modules
 from ..db import connect_user_db, connect_persistent_db
@@ -22,10 +22,7 @@ logger.setLevel(logging.INFO)
 
 PROCESSING = set()
 
-# This is now a regular function, not a decorated handler.
-# It's called by the MessageHandler we set up in main.py.
 async def live_forward_handler(client, message):
-    print("Live forward handler called with message_id:", message.id, "and chat_id:", message.chat.id)  # Print the message id and chat id (the channel id is, message.chat.id)
     if message.chat.id not in Config.LIVE_FORWARD_CONFIG:
         return
 
@@ -37,9 +34,21 @@ async def live_forward_handler(client, message):
     try:
         config = Config.LIVE_FORWARD_CONFIG[message.chat.id]
         user_id = config["user_id"]
+        bot_id = config["bot_id"]
+        to_chat_id = config["to_chat_id"]
+        
+        # --- KEY FIX ---
+        # Instead of creating a new client, get the persistent one from the temp storage.
+        client_key = f"{user_id}_{bot_id}"
+        forwarder_client = temp.FORWARDER_CLIENTS.get(client_key)
+
+        if not forwarder_client or not forwarder_client.is_connected:
+            logging.warning(f"Forwarder client for {client_key} not found or disconnected. Skipping message.")
+            return
         
         configs = await db.get_configs(user_id)
         
+        # --- Filtering logic (remains the same) ---
         if (message.text and not configs.get('filters', {}).get('text', True)) or \
            (message.document and not configs.get('filters', {}).get('document', True)) or \
            (message.video and not configs.get('filters', {}).get('video', True)) or \
@@ -99,36 +108,28 @@ async def live_forward_handler(client, message):
                     await user_db.add_file(fuid)
                     await user_db.close()
 
-        forward_client_details = await db.get_bot(user_id, config['bot_id']) or await db.get_userbot(user_id, config['bot_id'])
-        if not forward_client_details:
-            return
-
-        session_or_token = forward_client_details.get('token') or forward_client_details.get('session')
-        forward_client = await get_client(session_or_token, is_bot=forward_client_details.get('is_bot', True))
-
-        async with forward_client:
-            to_chat_id = config["to_chat_id"]
-            if configs.get('forward_tag'):
-                await forward_client.forward_messages(
-                    chat_id=to_chat_id,
-                    from_chat_id=message.chat.id,
-                    message_ids=message.id,
-                    protect_content=configs.get('protect', False)
-                )
-            else:
-                new_caption = custom_caption(message, configs.get('caption'))
-                if new_caption and message_replacements:
-                    for find, replace in message_replacements.items():
-                        new_caption = new_caption.replace(find, replace)
-                
-                await forward_client.copy_message(
-                    chat_id=to_chat_id,
-                    from_chat_id=message.chat.id,
-                    message_id=message.id,
-                    caption=new_caption if new_caption is not None else (message.caption or ""),
-                    reply_markup=parse_buttons(configs.get('button') or ''),
-                    protect_content=configs.get('protect', False)
-                )
+        # --- Forwarding logic (using the persistent client) ---
+        if configs.get('forward_tag'):
+            await forwarder_client.forward_messages(
+                chat_id=to_chat_id,
+                from_chat_id=message.chat.id,
+                message_ids=message.id,
+                protect_content=configs.get('protect', False)
+            )
+        else:
+            new_caption = custom_caption(message, configs.get('caption'))
+            if new_caption and message_replacements:
+                for find, replace in message_replacements.items():
+                    new_caption = new_caption.replace(find, replace)
+            
+            await forwarder_client.copy_message(
+                chat_id=to_chat_id,
+                from_chat_id=message.chat.id,
+                message_id=message.id,
+                caption=new_caption if new_caption is not None else (message.caption or ""),
+                reply_markup=parse_buttons(configs.get('button') or ''),
+                protect_content=configs.get('protect', False)
+            )
     except FloodWait as e:
         await asyncio.sleep(e.value)
     except Exception as e:
