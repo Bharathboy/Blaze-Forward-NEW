@@ -6,15 +6,16 @@ from pyrogram.errors import FloodWait
 
 from config import Config
 from database import db
-from plugins.db import connect_user_db, connect_persistent_db
-from plugins.regix import (
+# FIX: Change imports to be relative to the parent 'plugins' directory
+from ..db import connect_user_db, connect_persistent_db
+from ..regix import (
     custom_caption,
     extension_filter,
     keyword_filter,
     media,
     size_filter,
 )
-from plugins.test import get_client, parse_buttons
+from ..test import get_client, parse_buttons
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -24,6 +25,7 @@ PROCESSING = set()
 
 @Client.on_message(filters.channel & ~filters.incoming, group=-1)
 async def live_forward_handler(client, message):
+    print("msg recived from channel id", message.chat.id)
     if message.chat.id not in Config.LIVE_FORWARD_CONFIG:
         return
 
@@ -40,8 +42,6 @@ async def live_forward_handler(client, message):
         configs = await db.get_configs(user_id)
         
         # --- Start Filtering ---
-        
-        # 1. Standard Filters (text, document, etc.)
         if (message.text and not configs.get('filters', {}).get('text', True)) or \
            (message.document and not configs.get('filters', {}).get('document', True)) or \
            (message.video and not configs.get('filters', {}).get('video', True)) or \
@@ -53,7 +53,6 @@ async def live_forward_handler(client, message):
            (message.poll and not configs.get('filters', {}).get('poll', True)):
             return
 
-        # Prepare media attributes for further filtering
         media_obj = fname = fsize = fuid = None
         if message.media:
             media_obj = getattr(message, message.media.value, None)
@@ -62,7 +61,6 @@ async def live_forward_handler(client, message):
                 fsize = getattr(media_obj, "file_size", 0)
                 fuid = getattr(media_obj, "file_unique_id", None)
 
-        # 2. Premium & Advanced Filters
         user_rank = await db.get_premium_user_rank(user_id)
         message_replacements = None
         persistent_deduplication = False
@@ -89,7 +87,6 @@ async def live_forward_handler(client, message):
         if media_obj and fsize and await size_filter(configs.get('max_size', 0), configs.get('min_size', 0), fsize):
             return
 
-        # 3. Deduplication Filter
         if (configs.get('duplicate', True) or persistent_deduplication) and fuid:
             db_uri = configs.get('db_uri')
             if db_uri:
@@ -104,9 +101,6 @@ async def live_forward_handler(client, message):
                     await user_db.add_file(fuid)
                     await user_db.close()
 
-        # --- End Filtering ---
-
-        # Get the client that will perform the forward
         forward_client_details = await db.get_bot(user_id, config['bot_id']) or await db.get_userbot(user_id, config['bot_id'])
         if not forward_client_details:
             return
@@ -141,7 +135,7 @@ async def live_forward_handler(client, message):
     except FloodWait as e:
         await asyncio.sleep(e.value)
     except Exception as e:
-        logger.error(f"Error in live forward handler for message {message.id} in chat {message.chat.id}: {e}", exc_info=True)
+        logging.error(f"Error in live forward handler for message {message.id} in chat {message.chat.id}: {e}", exc_info=True)
     finally:
         if message_identifier in PROCESSING:
             PROCESSING.remove(message_identifier)
