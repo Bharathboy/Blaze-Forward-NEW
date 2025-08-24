@@ -65,7 +65,7 @@ async def helpcb(bot, query):
         InlineKeyboardButton('• back', callback_data='back')
     ]]
     reply_markup = InlineKeyboardMarkup(buttons)
-    await query.message.edit_text(text=Script.HELP_TXT, reply_markup=reply_markup)
+    await query.message.edit_text(text=Script.HELP_TXT, reply_markup=reply_markup, disable_web_page_preview=True)
 
 
 
