@@ -47,6 +47,7 @@ Here are the available plans to enhance your experience. Contact the bot owner t
 - **Forward Tasks:** `{bronze_limit}`
 - **Forward Speed:** `Normal`
 - **Premium Features:** `Included`
+- **Live Forward Source:** `2`
 - **Premium Duration:** `30 days`
 
 🥈 **Silver Plan**
@@ -54,6 +55,7 @@ Here are the available plans to enhance your experience. Contact the bot owner t
 - **Forward Tasks:** `{silver_limit}`
 - **Forward Speed:** `Slightly Fast`
 - **Premium Features:** `Included`
+- **Live Forward Source:** `3`
 - **Premium Duration:** `45 days`
 
 🥇 **Gold Plan**
@@ -61,12 +63,14 @@ Here are the available plans to enhance your experience. Contact the bot owner t
 - **Forward Tasks:** `{gold_limit}`
 - **Forward Speed:** `Fast`
 - **Premium Features:** `Included`
+- **Live Forward Source:** `4`
 - **Premium Duration:** `60 days`
 
 **Free Plan:**
 - **Forward Tasks:** `{default_limit}`
 - **Forward Speed:** `Normal`
 - **Premium Features:** `Not Included`
+- **Live Forward Source:** `1`
 """
 
   HOW_USE_TXT = """<b><u>⚠️ ʙᴇꜰᴏʀᴇ ꜰᴏʀᴡᴀʀᴅɪɴɢ:</b></u>

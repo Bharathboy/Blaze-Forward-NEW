@@ -19,6 +19,30 @@ pyro_log.setLevel(logging.WARNING)
 
 temp.USER_CLIENTS = {}
 
+async def check_expired_premiums(client):
+    """Periodically checks for and removes expired premium plans, notifying users."""
+    while True:
+        try:
+            expired_user_ids = await db.get_and_remove_expired_users()
+            for user_id in expired_user_ids:
+                try:
+                    await asyncio.sleep(1)
+                    await client.send_message(
+                        user_id,
+                        "😢 **Your premium plan has expired.** 😢\n\n"
+                        "You have been reverted to the **Free** plan. To upgrade again, please contact the bot owner."
+                    )
+                    logging.info(f"Sent expiration notice to user {user_id}")
+                except Exception as e:
+                    logging.warning(f"Could not send expiration notice to user {user_id}: {e}")
+            
+            # Sleep for 1 hour before the next check
+            await asyncio.sleep(3600)
+        except Exception as e:
+            logging.error(f"Error in background premium check: {e}", exc_info=True)
+            # Sleep for 5 minutes on error to avoid spamming logs
+            await asyncio.sleep(300)
+
 async def start_user_client(user_id, listener_bot_id):
     """
     Starts a single, persistent userbot client for a user if not already running.
@@ -94,6 +118,7 @@ if __name__ == "__main__":
     async def main():
         await VJBot.start()
         logging.info("Main bot started.")
+        asyncio.create_task(check_expired_premiums(VJBot))
         await load_all_live_forwards_on_startup()
         await restart_forwards(VJBot)
         logging.info("Bot is now online and ready.")
