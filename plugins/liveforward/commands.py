@@ -6,7 +6,8 @@ from pyrogram.errors import ChannelPrivate
 from config import Config, temp
 from database import db
 from script import Script
-# FIX: Removed the circular import: from main import ...
+# Import the controller functions from main
+from main import start_live_forwarder_for_user, stop_live_forwarder_for_user
 
 if not hasattr(Config, 'LIVE_FORWARD_CONFIG'):
     Config.LIVE_FORWARD_CONFIG = {}
@@ -36,6 +37,9 @@ async def live_forward_command(client, message):
 async def finalize_and_start_live_forward(client, message, user_id, conv):
     """A helper function to store config and start the user's listener."""
     from_chat_id = conv['from_chat_id']
+    userbot_username = conv.get('userbots', [{}])[0].get('username', 'your userbot')
+
+    # Store config in memory and database
     Config.LIVE_FORWARD_CONFIG[from_chat_id] = {
         "user_id": user_id,
         "to_chat_id": conv['to_chat_id'],
@@ -44,10 +48,17 @@ async def finalize_and_start_live_forward(client, message, user_id, conv):
     }
     await db.add_live_forward(user_id, from_chat_id, conv['to_chat_id'], conv['bot_id'], conv['client_type'])
     
-    # FIX: Call the function attached to the client instance
+    # Start the user's specific listener client
     await client.start_live_forwarder(user_id)
     
-    await message.edit_text(f"✅ Live forwarding activated!\n\nNew messages from `{from_chat_id}` will be forwarded to `{conv['to_chat_id']}`.\n\nUse /stoplive to stop.")
+    # KEY FIX: Add a clear instruction to the user.
+    final_message = (
+        f"✅ Live forwarding activated!\n\n"
+        f"**IMPORTANT**: Please ensure your userbot account (`@{userbot_username}`) "
+        f"has **JOINED** the source channel/group (`{from_chat_id}`) for it to detect new messages.\n\n"
+        f"Use /stoplive to stop."
+    )
+    await message.edit_text(final_message)
     temp.LIVE_FORWARD_CONV.pop(user_id, None)
 
 @Client.on_callback_query(filters.regex(r"^live:"))
@@ -137,7 +148,6 @@ async def stop_live_forward(client, message):
         del Config.LIVE_FORWARD_CONFIG[key]
         await db.remove_live_forward(user_id, key)
     
-    # FIX: Call the function attached to the client instance
     await client.stop_live_forwarder(user_id)
     
     await message.reply_text("✅ All active live forward sessions have been stopped.")

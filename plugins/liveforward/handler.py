@@ -25,6 +25,7 @@ PROCESSING = set()
 # This is now a regular function, not a decorated handler.
 # It's called by the MessageHandler we set up in main.py.
 async def live_forward_handler(client, message):
+    print("Live forward handler called with message_id:", message.id, "and chat_id:", message.chat.id)  # Print the message id and chat id (the channel id is, message.chat.id)
     if message.chat.id not in Config.LIVE_FORWARD_CONFIG:
         return
 

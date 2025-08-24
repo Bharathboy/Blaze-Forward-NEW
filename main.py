@@ -5,7 +5,7 @@ from pyrogram.handlers import MessageHandler
 from config import Config, temp
 from database import db
 from plugins.regix import restart_forwards
-# Correctly import the handler function (not as a plugin)
+# Import the handler function from its correct location
 from plugins.liveforward.handler import live_forward_handler
 
 logging.basicConfig(
@@ -36,9 +36,10 @@ async def start_live_forwarder_for_user(user_id):
         )
         await user_client.start()
         
-        # This is the key fix: Manually add the handler to the running userbot client.
-        # It tells the userbot to execute `live_forward_handler` for every new channel message it sees.
-        user_client.add_handler(MessageHandler(live_forward_handler, filters.channel & ~filters.me))
+        # KEY FIX: This filter now listens to BOTH channels and groups.
+        # The `~filters.me` prevents the bot from forwarding its own messages.
+        broad_filter = (filters.channel | filters.group) & ~filters.me
+        user_client.add_handler(MessageHandler(live_forward_handler, broad_filter))
         
         temp.LIVE_FORWARD_CLIENTS[user_id] = user_client
         logging.info(f"Successfully started live forwarder listener for user {user_id}.")
@@ -77,7 +78,6 @@ if __name__ == "__main__":
         api_id=Config.API_ID,
         api_hash=Config.API_HASH,
         sleep_threshold=120,
-        # Load all plugins from the 'plugins' directory, which now includes 'liveforward'
         plugins=dict(root="plugins")
     )
 
