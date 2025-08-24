@@ -6,8 +6,6 @@ from pyrogram.errors import ChannelPrivate
 from config import Config, temp
 from database import db
 from script import Script
-# Import the controller functions from main
-from main import start_live_forwarder_for_user, stop_live_forwarder_for_user
 
 if not hasattr(Config, 'LIVE_FORWARD_CONFIG'):
     Config.LIVE_FORWARD_CONFIG = {}
@@ -22,40 +20,42 @@ async def live_forward_command(client, message):
         return
     userbots = await db.get_userbots(user_id)
     if not userbots:
-        await message.reply_text("A userbot is required for live forwarding. Please add one in /settings before proceeding.")
+        await message.reply_text("A userbot is required for live forwarding. Please add one in /settings.")
         return
     temp.LIVE_FORWARD_CONV[user_id] = {"userbots": userbots}
     channels = await db.get_user_channels(user_id)
     if not channels:
-        await message.reply_text("Please add a destination (To) channel in /settings first.")
+        await message.reply_text("Please add a destination (To) channel in /settings.")
         temp.LIVE_FORWARD_CONV.pop(user_id, None)
         return
     buttons = [[InlineKeyboardButton(ch['title'], callback_data=f"live:to:{ch['chat_id']}")] for ch in channels]
     buttons.append([InlineKeyboardButton("Cancel", callback_data="live:cancel")])
-    await message.reply_text("First, select the destination (To) channel for your live forward:", reply_markup=InlineKeyboardMarkup(buttons))
+    await message.reply_text("Select the destination (To) channel:", reply_markup=InlineKeyboardMarkup(buttons))
 
 async def finalize_and_start_live_forward(client, message, user_id, conv):
-    """A helper function to store config and start the user's listener."""
     from_chat_id = conv['from_chat_id']
+    bot_id = conv['bot_id']
+    client_type = conv['client_type']
     userbot_username = conv.get('userbots', [{}])[0].get('username', 'your userbot')
 
-    # Store config in memory and database
-    Config.LIVE_FORWARD_CONFIG[from_chat_id] = {
+    config_data = {
         "user_id": user_id,
+        "from_chat_id": from_chat_id,
         "to_chat_id": conv['to_chat_id'],
-        "bot_id": conv['bot_id'],
-        "client_type": conv['client_type']
+        "bot_id": bot_id,
+        "client_type": client_type
     }
-    await db.add_live_forward(user_id, from_chat_id, conv['to_chat_id'], conv['bot_id'], conv['client_type'])
+    Config.LIVE_FORWARD_CONFIG[from_chat_id] = config_data
+    await db.add_live_forward(user_id, from_chat_id, conv['to_chat_id'], bot_id, client_type)
     
-    # Start the user's specific listener client
-    await client.start_live_forwarder(user_id)
+    # Start the necessary clients
+    await client.start_listener(user_id)
+    await client.start_forwarder(user_id, bot_id, client_type)
     
-    # KEY FIX: Add a clear instruction to the user.
     final_message = (
         f"✅ Live forwarding activated!\n\n"
-        f"**IMPORTANT**: Please ensure your userbot account (`@{userbot_username}`) "
-        f"has **JOINED** the source channel/group (`{from_chat_id}`) for it to detect new messages.\n\n"
+        f"**IMPORTANT**: Please ensure your userbot (`@{userbot_username}`) "
+        f"has **JOINED** the source channel/group (`{from_chat_id}`) to detect new messages.\n\n"
         f"Use /stoplive to stop."
     )
     await message.edit_text(final_message)
@@ -72,17 +72,15 @@ async def live_forward_callbacks(client, query):
         return
     if action == "cancel":
         temp.LIVE_FORWARD_CONV.pop(user_id, None)
-        await query.message.edit_text("Live forwarding setup cancelled.")
+        await query.message.edit_text("Setup cancelled.")
         return
     if action == "to":
-        to_chat_id = int(parts[2])
-        conv['to_chat_id'] = to_chat_id
+        conv['to_chat_id'] = int(parts[2])
         conv['step'] = 'waiting_from'
-        await query.message.edit_text("Great. Now, forward a message from the source (From) channel, or send me its link.")
+        await query.message.edit_text("Great. Now, forward a message from the source channel, or send its link.")
     elif action == "client":
-        client_type, bot_id = parts[2], int(parts[3])
-        conv['client_type'] = client_type
-        conv['bot_id'] = bot_id
+        conv['client_type'] = parts[2]
+        conv['bot_id'] = int(parts[3])
         await finalize_and_start_live_forward(client, query.message, user_id, conv)
 
 @Client.on_message(filters.private & (filters.text | filters.forwarded), group=-2)
@@ -92,26 +90,12 @@ async def live_forward_message_handler(client, message):
     if not conv or conv.get('step') != 'waiting_from':
         return
     if message.text and message.text.startswith('/'):
-        if message.text == '/cancel':
-            temp.LIVE_FORWARD_CONV.pop(user_id, None)
-            await message.reply_text("Setup cancelled.")
         return
-    from_chat_id = None
-    is_private = False
     processing_msg = await message.reply_text("`Checking channel...`")
     try:
-        if message.forward_from_chat:
-            from_chat_id = message.forward_from_chat.id
-            if message.forward_from_chat.type == enums.ChatType.CHANNEL and not message.forward_from_chat.username:
-                is_private = True
-        elif message.text and "t.me" in message.text:
-            chat_info = await client.get_chat(message.text.split('/')[-2] if "/c/" in message.text else message.text)
-            from_chat_id = chat_info.id
-            if chat_info.type == enums.ChatType.CHANNEL and not chat_info.username:
-                is_private = True
-        else:
-            await processing_msg.edit_text("Invalid input. Please forward a message or send a channel link.")
-            return
+        chat_info = await client.get_chat(message.forward_from_chat.id if message.forward_from_chat else message.text)
+        from_chat_id = chat_info.id
+        is_private = not chat_info.username
         conv['from_chat_id'] = from_chat_id
         if is_private:
             userbot = conv['userbots'][0]
@@ -120,34 +104,29 @@ async def live_forward_message_handler(client, message):
             await finalize_and_start_live_forward(client, processing_msg, user_id, conv)
         else:
             bots = await db.get_bots(user_id)
-            userbots = conv['userbots']
             buttons = [[InlineKeyboardButton(f"🤖 BOT: {b.get('name', 'N/A')}", callback_data=f"live:client:bot:{b['id']}")] for b in bots]
-            buttons.extend([[InlineKeyboardButton(f"👤 USERBOT: {u.get('name', 'N/A')}", callback_data=f"live:client:userbot:{u['id']}")] for u in userbots])
+            buttons.extend([[InlineKeyboardButton(f"👤 USERBOT: {u.get('name', 'N/A')}", callback_data=f"live:client:userbot:{u['id']}")] for u in conv['userbots']])
             buttons.append([InlineKeyboardButton("Cancel", callback_data="live:cancel")])
-            await processing_msg.edit_text("Public channel detected. Please select which bot or userbot to use for forwarding:", reply_markup=InlineKeyboardMarkup(buttons))
+            await processing_msg.edit_text("Public channel detected. Select the forwarder:", reply_markup=InlineKeyboardMarkup(buttons))
             conv['step'] = 'waiting_client_choice'
-    except ChannelPrivate:
-        from_chat_id = message.forward_from_chat.id
-        conv['from_chat_id'] = from_chat_id
-        userbot = conv['userbots'][0]
-        conv['client_type'] = 'userbot'
-        conv['bot_id'] = userbot['id']
-        await finalize_and_start_live_forward(client, processing_msg, user_id, conv)
     except Exception as e:
-        await processing_msg.edit_text(f"An error occurred: `{e}`\nPlease try again.")
+        await processing_msg.edit_text(f"An error occurred: `{e}`\nPlease ensure the link is correct or the userbot is in the private channel.")
         temp.LIVE_FORWARD_CONV.pop(user_id, None)
 
 @Client.on_message(filters.private & filters.command("stoplive"))
 async def stop_live_forward(client, message):
     user_id = message.from_user.id
-    keys_to_remove = [key for key, conf in Config.LIVE_FORWARD_CONFIG.items() if conf['user_id'] == user_id]
-    if not keys_to_remove:
-        await message.reply_text("You don't have any active live forward sessions.")
+    configs_to_stop = [conf for conf in Config.LIVE_FORWARD_CONFIG.values() if conf['user_id'] == user_id]
+    if not configs_to_stop:
+        await message.reply_text("You don't have any active live forwards.")
         return
-    for key in keys_to_remove:
-        del Config.LIVE_FORWARD_CONFIG[key]
-        await db.remove_live_forward(user_id, key)
-    
-    await client.stop_live_forwarder(user_id)
-    
-    await message.reply_text("✅ All active live forward sessions have been stopped.")
+    for config in configs_to_stop:
+        del Config.LIVE_FORWARD_CONFIG[config['from_chat_id']]
+        await db.remove_live_forward(user_id, config['from_chat_id'])
+        # Stop the specific forwarder client if it's not used by other forwards
+        is_forwarder_in_use = any(c['bot_id'] == config['bot_id'] and c['user_id'] == user_id for c in Config.LIVE_FORWARD_CONFIG.values())
+        if not is_forwarder_in_use:
+            await client.stop_forwarder(user_id, config['bot_id'])
+    # Stop the listener client as there are no more forwards for this user
+    await client.stop_listener(user_id)
+    await message.reply_text("✅ All live forward sessions have been stopped.")
