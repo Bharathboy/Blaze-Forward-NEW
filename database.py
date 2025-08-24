@@ -104,14 +104,13 @@ class Db:
                'sticker': True
             },
             'regex_filter': None,
-            'regex_filter_mode': 'exclude', # 'exclude' or 'include'
+            'regex_filter_mode': 'exclude',
             'persistent_deduplication': False,
             'message_replacements': None
         }
         user = await self.col.find_one({'id':int(id)})
         if user:
             user_configs = user.get('configs', {})
-            # Ensure new keys exist
             for key, value in default.items():
                 if key not in user_configs:
                     user_configs[key] = value
@@ -282,8 +281,6 @@ class Db:
             
         return expired_users
     
-    # --- KEY FIX ---
-    # Updated to accept the new listener_bot_id parameter
     async def add_live_forward(self, user_id, from_chat_id, to_chat_id, bot_id, client_type, listener_bot_id):
         await self.live_forwards.update_one(
             {"user_id": user_id, "from_chat_id": from_chat_id},
@@ -291,7 +288,7 @@ class Db:
                 "to_chat_id": to_chat_id,
                 "bot_id": bot_id,
                 "client_type": client_type,
-                "listener_bot_id": listener_bot_id # Save the new field
+                "listener_bot_id": listener_bot_id
             }},
             upsert=True
         )

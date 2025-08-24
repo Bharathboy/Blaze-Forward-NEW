@@ -20,31 +20,40 @@ async def live_forward_command(client, message):
     if any(conf['user_id'] == user_id for conf in Config.LIVE_FORWARD_CONFIG.values()):
         await message.reply_text("You already have an active live forward session. Use /stoplive to stop it first.")
         return
+        
     userbots = await db.get_userbots(user_id)
     if not userbots:
         await message.reply_text("A userbot is required for live forwarding. Please add one in /settings.")
         return
 
     temp.LIVE_FORWARD_CONV[user_id] = {"userbots": userbots}
-    
-    # Auto-select the first userbot as the listener
-    conv = temp.LIVE_FORWARD_CONV[user_id]
-    conv['listener_bot_id'] = userbots[0]['id']
-    
-    channels = await db.get_user_channels(user_id)
-    if not channels:
-        await message.reply_text("Please add a destination (To) channel in /settings.")
-        temp.LIVE_FORWARD_CONV.pop(user_id, None)
-        return
+
+    if len(userbots) == 1:
+        # Auto-select if only one userbot exists
+        conv = temp.LIVE_FORWARD_CONV[user_id]
+        conv['listener_bot_id'] = userbots[0]['id']
         
-    buttons = [[InlineKeyboardButton(ch['title'], callback_data=f"live:to:{ch['chat_id']}")] for ch in channels]
-    buttons.append([InlineKeyboardButton("Cancel", callback_data="live:cancel")])
-    await message.reply_text("Your primary userbot will be used for listening. Now, select the destination (To) channel:", reply_markup=InlineKeyboardMarkup(buttons))
+        channels = await db.get_user_channels(user_id)
+        if not channels:
+            await message.reply_text("Please add a destination (To) channel in /settings.")
+            temp.LIVE_FORWARD_CONV.pop(user_id, None)
+            return
+            
+        buttons = [[InlineKeyboardButton(ch['title'], callback_data=f"live:to:{ch['chat_id']}")] for ch in channels]
+        buttons.append([InlineKeyboardButton("Cancel", callback_data="live:cancel")])
+        await message.reply_text("Using your only userbot for listening. Now, select the destination (To) channel:", reply_markup=InlineKeyboardMarkup(buttons))
+    else:
+        # Ask the user to choose a listener
+        buttons = [[InlineKeyboardButton(f"👤 {ub.get('name', 'N/A')}", callback_data=f"live:listener:{ub['id']}")] for ub in userbots]
+        buttons.append([InlineKeyboardButton("Cancel", callback_data="live:cancel")])
+        await message.reply_text("Please select the userbot you want to use for listening to new messages:", reply_markup=InlineKeyboardMarkup(buttons))
 
 
 async def finalize_and_start_live_forward(client, message, user_id, conv):
     from_chat_id = conv['from_chat_id']
-    listener_bot_details = conv.get('userbots', [{}])[0]
+    listener_bot_id = conv['listener_bot_id']
+    
+    listener_bot_details = next((ub for ub in conv['userbots'] if ub['id'] == listener_bot_id), {})
     userbot_username = listener_bot_details.get('username', 'your userbot')
 
     config_data = {
@@ -52,14 +61,13 @@ async def finalize_and_start_live_forward(client, message, user_id, conv):
         "from_chat_id": from_chat_id,
         "to_chat_id": conv['to_chat_id'],
         "bot_id": conv['bot_id'],
-        "client_type": conv['client_type']
+        "client_type": conv['client_type'],
+        "listener_bot_id": listener_bot_id
     }
     Config.LIVE_FORWARD_CONFIG[from_chat_id] = config_data
-    await db.add_live_forward(user_id, from_chat_id, conv['to_chat_id'], conv['bot_id'], conv['client_type'])
+    await db.add_live_forward(user_id, from_chat_id, conv['to_chat_id'], conv['bot_id'], conv['client_type'], listener_bot_id)
     
-    # --- KEY FIX ---
-    # Call the function with only the required user_id argument
-    await client.start_user_client(user_id)
+    await client.start_user_client(user_id, listener_bot_id)
     
     final_message = (
         f"✅ Live forwarding activated!\n\n"
@@ -83,8 +91,19 @@ async def live_forward_callbacks(client, query):
         temp.LIVE_FORWARD_CONV.pop(user_id, None)
         await query.message.edit_text("Setup cancelled.")
         return
+        
+    if action == "listener":
+        conv['listener_bot_id'] = int(parts[2])
+        channels = await db.get_user_channels(user_id)
+        if not channels:
+            await query.message.edit_text("Please add a destination (To) channel in /settings.")
+            temp.LIVE_FORWARD_CONV.pop(user_id, None)
+            return
+        buttons = [[InlineKeyboardButton(ch['title'], callback_data=f"live:to:{ch['chat_id']}")] for ch in channels]
+        buttons.append([InlineKeyboardButton("Cancel", callback_data="live:cancel")])
+        await query.message.edit_text("Great. Now, select the destination (To) channel:", reply_markup=InlineKeyboardMarkup(buttons))
 
-    if action == "to":
+    elif action == "to":
         conv['to_chat_id'] = int(parts[2])
         conv['step'] = 'waiting_from'
         await query.message.edit_text("Excellent. Finally, forward a message from the source channel, or send its link.")
@@ -106,7 +125,13 @@ async def live_forward_message_handler(client, message):
     processing_msg = await message.reply_text("`Checking channel...`")
     
     try:
-        userbot_session = conv['userbots'][0]['session']
+        listener_bot_id = conv.get('listener_bot_id')
+        userbot_session = next((ub['session'] for ub in conv['userbots'] if ub['id'] == listener_bot_id), None)
+
+        if not userbot_session:
+            await processing_msg.edit_text("Error: Could not find the selected listener userbot session.")
+            return
+
         checker_client = await get_client(userbot_session, is_bot=False)
         async with checker_client:
             chat_info = await checker_client.get_chat(message.forward_from_chat.id if message.forward_from_chat else message.text)
@@ -116,7 +141,7 @@ async def live_forward_message_handler(client, message):
         conv['from_chat_id'] = from_chat_id
 
         if is_private:
-            userbot = conv['userbots'][0]
+            userbot = next((ub for ub in conv['userbots'] if ub['id'] == listener_bot_id), None)
             conv['client_type'] = 'userbot'
             conv['bot_id'] = userbot['id']
             await finalize_and_start_live_forward(client, processing_msg, user_id, conv)
@@ -129,7 +154,7 @@ async def live_forward_message_handler(client, message):
             conv['step'] = 'waiting_client_choice'
             
     except Exception as e:
-        await processing_msg.edit_text(f"An error occurred: `{e}`\nPlease ensure the link is correct or that your userbot has joined the channel.")
+        await processing_msg.edit_text(f"An error occurred: `{e}`\nPlease ensure the link is correct or that your selected userbot has joined the channel.")
         temp.LIVE_FORWARD_CONV.pop(user_id, None)
 
 @Client.on_message(filters.private & filters.command("stoplive"))
@@ -140,12 +165,18 @@ async def stop_live_forward(client, message):
         await message.reply_text("You don't have any active live forwards.")
         return
     
+    listener_bot_id = None
+    if configs_to_stop:
+        # Find the listener ID from the first forward config to stop the correct client
+        listener_config = await db.get_live_forward_config(user_id, configs_to_stop[0]['from_chat_id'])
+        if listener_config:
+            listener_bot_id = listener_config.get('listener_bot_id')
+
     for config in configs_to_stop:
         del Config.LIVE_FORWARD_CONFIG[config['from_chat_id']]
         await db.remove_live_forward(user_id, config['from_chat_id'])
     
-    # --- KEY FIX ---
-    # Call the function with only the required user_id argument
-    await client.stop_user_client(user_id)
+    if listener_bot_id:
+        await client.stop_user_client(user_id, listener_bot_id)
     
     await message.reply_text("✅ All active live forward sessions have been stopped.")
