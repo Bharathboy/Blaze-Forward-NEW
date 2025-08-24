@@ -20,12 +20,12 @@ from ..test import get_client, parse_buttons
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-# A set to prevent processing the same message simultaneously
 PROCESSING = set()
 
-@Client.on_message(filters.channel & ~filters.incoming, group=-1)
+# This function is now a regular async function, not a handler itself.
+# It will be registered as a handler dynamically in main.py.
 async def live_forward_handler(client, message):
-    print("msg recived from channel id", message.chat.id)
+    print("live_forward_handler called chat id:", message.chat.id)
     if message.chat.id not in Config.LIVE_FORWARD_CONFIG:
         return
 

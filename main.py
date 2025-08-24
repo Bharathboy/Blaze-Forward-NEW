@@ -18,30 +18,6 @@ pyro_log.setLevel(logging.WARNING)
 
 temp.LIVE_FORWARD_CLIENTS = {}
 
-
-
-async def check_expired_premiums(client):
-    """Periodically checks for and removes expired premium plans, notifying users."""
-    while True:
-        try:
-            expired_user_ids = await db.get_and_remove_expired_users()
-            for user_id in expired_user_ids:
-                try:
-                    await asyncio.sleep(1)
-                    await client.send_message(
-                        user_id,
-                        "😢 **Your premium plan has expired.** 😢\n\n"
-                        "You have been reverted to the **Free** plan. To upgrade again, please contact the bot owner."
-                    )
-                    logging.info(f"Sent expiration notice to user {user_id}")
-                except Exception as e:
-                    logging.warning(f"Could not send expiration notice to user {user_id}: {e}")
-            
-            await asyncio.sleep(3600)  # Sleep for 1 hour
-        except Exception as e:
-            logging.error(f"Error in background premium check: {e}", exc_info=True)
-            await asyncio.sleep(300)  # Sleep for 5 minutes on error
-
 async def start_live_forwarder_for_user(user_id):
     if user_id in temp.LIVE_FORWARD_CLIENTS:
         logging.info(f"Live forwarder for user {user_id} is already running.")
@@ -59,7 +35,9 @@ async def start_live_forwarder_for_user(user_id):
             session_string=userbot_session
         )
         await user_client.start()
-        user_client.add_handler(MessageHandler(live_forward_handler, filters.channel))
+        # FIX: Add the handler with a more reliable filter for a userbot client.
+        # This explicitly tells it to listen to all channel posts.
+        user_client.add_handler(MessageHandler(live_forward_handler, filters.channel ))
         temp.LIVE_FORWARD_CLIENTS[user_id] = user_client
         logging.info(f"Successfully started live forwarder listener for user {user_id}.")
     except Exception as e:
@@ -97,7 +75,6 @@ if __name__ == "__main__":
         api_id=Config.API_ID,
         api_hash=Config.API_HASH,
         sleep_threshold=120,
-        # Simplify plugin loading to the single 'plugins' root
         plugins=dict(root="plugins")
     )
 
