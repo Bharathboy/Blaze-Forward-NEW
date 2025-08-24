@@ -13,7 +13,7 @@ class Db:
         self.nfy = self.db.notify
         self.chl = self.db.channels
         self.premium = self.db.premium_users
-        self.live_forwards = self.db.live_forwards # New
+        self.live_forwards = self.db.live_forwards
 
     def new_user(self, id, name):
         return dict(
@@ -142,8 +142,11 @@ class Db:
     async def remove_userbot(self, user_id, bot_id):
         await self.userbot.delete_one({'user_id': int(user_id), 'id': int(bot_id)})
 
-    async def get_userbot(self, user_id: int, bot_id: int):
-        bot = await self.userbot.find_one({'user_id': user_id, 'id': bot_id})
+    async def get_userbot(self, user_id: int, bot_id: int=None):
+        if bot_id:
+            bot = await self.userbot.find_one({'user_id': user_id, 'id': bot_id})
+        else:
+            bot = await self.userbot.find_one({'user_id': user_id})
         return bot if bot else None
     
     async def get_userbots(self, user_id: int):
@@ -257,7 +260,6 @@ class Db:
         user = await self.get_premium_user(user_id)
         if not user:
             return False
-        # Check if expiry_time exists and if it's in the past
         if user.get('expiry_time') and user['expiry_time'] < datetime.now():
             return False
         return True
@@ -271,7 +273,6 @@ class Db:
     async def get_and_remove_expired_users(self):
         expired_users = []
         current_time = datetime.now()
-        # Find users with an expiry_time that is not null and is in the past
         cursor = self.premium.find({"expiry_time": {"$ne": None, "$lt": current_time}})
         async for user in cursor:
             expired_users.append(user['user_id'])
@@ -281,14 +282,16 @@ class Db:
             
         return expired_users
     
-    # New methods for live forwarding
-    async def add_live_forward(self, user_id, from_chat_id, to_chat_id, bot_id, client_type):
+    # --- KEY FIX ---
+    # Updated to accept the new listener_bot_id parameter
+    async def add_live_forward(self, user_id, from_chat_id, to_chat_id, bot_id, client_type, listener_bot_id):
         await self.live_forwards.update_one(
             {"user_id": user_id, "from_chat_id": from_chat_id},
             {"$set": {
                 "to_chat_id": to_chat_id,
                 "bot_id": bot_id,
-                "client_type": client_type
+                "client_type": client_type,
+                "listener_bot_id": listener_bot_id # Save the new field
             }},
             upsert=True
         )
@@ -298,5 +301,9 @@ class Db:
 
     async def get_all_live_forwards(self):
         return self.live_forwards.find({})
+    
+    async def get_live_forward_config(self, user_id, from_chat_id):
+        return await self.live_forwards.find_one({"user_id": user_id, "from_chat_id": from_chat_id})
+
 
 db = Db(Config.DATABASE_URI, Config.DATABASE_NAME)
