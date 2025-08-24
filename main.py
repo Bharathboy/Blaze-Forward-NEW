@@ -16,9 +16,14 @@ logging.basicConfig(
 pyro_log = logging.getLogger("pyrogram")
 pyro_log.setLevel(logging.WARNING)
 
+
 temp.USER_CLIENTS = {}
 
 async def start_user_client(user_id, listener_bot_id):
+    """
+    Starts a single, persistent userbot client for a user if not already running.
+    This client is used for listening.
+    """
     client_key = f"{user_id}_{listener_bot_id}"
     if client_key in temp.USER_CLIENTS:
         logging.info(f"User client for {client_key} is already running.")
@@ -38,6 +43,7 @@ async def start_user_client(user_id, listener_bot_id):
             session_string=session_string
         )
         await client.start()
+        
         client.add_handler(MessageHandler(live_forward_handler, (filters.channel | filters.group) & ~filters.me))
         temp.USER_CLIENTS[client_key] = client
         logging.info(f"Successfully started and registered listener for client key: {client_key}")
@@ -45,6 +51,7 @@ async def start_user_client(user_id, listener_bot_id):
         logging.error(f"Failed to start user client for {client_key}: {e}", exc_info=True)
 
 async def stop_user_client(user_id, listener_bot_id):
+    """Stops the persistent user client."""
     client_key = f"{user_id}_{listener_bot_id}"
     if client_key in temp.USER_CLIENTS:
         try:
@@ -56,6 +63,7 @@ async def stop_user_client(user_id, listener_bot_id):
             del temp.USER_CLIENTS[client_key]
 
 async def load_all_live_forwards_on_startup():
+    """Loads all saved forward configs and starts one client for each unique user."""
     all_forwards = await db.get_all_live_forwards()
     unique_listeners = {}
     async for forward in all_forwards:
@@ -79,6 +87,7 @@ if __name__ == "__main__":
         plugins=dict(root="plugins")
     )
 
+    
     VJBot.start_user_client = start_user_client
     VJBot.stop_user_client = stop_user_client
       
