@@ -4,7 +4,6 @@ import asyncio, logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s ",
-    # (%(pathname)s:%(lineno)d)",
     force=True
 )
 
