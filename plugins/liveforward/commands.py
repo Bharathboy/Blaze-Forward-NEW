@@ -34,23 +34,20 @@ async def live_forward_command(client, message):
 
 async def finalize_and_start_live_forward(client, message, user_id, conv):
     from_chat_id = conv['from_chat_id']
-    bot_id = conv['bot_id']
-    client_type = conv['client_type']
     userbot_username = conv.get('userbots', [{}])[0].get('username', 'your userbot')
 
     config_data = {
         "user_id": user_id,
         "from_chat_id": from_chat_id,
         "to_chat_id": conv['to_chat_id'],
-        "bot_id": bot_id,
-        "client_type": client_type
+        "bot_id": conv['bot_id'],
+        "client_type": conv['client_type']
     }
     Config.LIVE_FORWARD_CONFIG[from_chat_id] = config_data
-    await db.add_live_forward(user_id, from_chat_id, conv['to_chat_id'], bot_id, client_type)
+    await db.add_live_forward(user_id, from_chat_id, conv['to_chat_id'], conv['bot_id'], conv['client_type'])
     
-    # Start the necessary clients
-    await client.start_listener(user_id)
-    await client.start_forwarder(user_id, bot_id, client_type)
+    # Start the single, persistent client for the user
+    await client.start_user_client(user_id)
     
     final_message = (
         f"✅ Live forwarding activated!\n\n"
@@ -123,10 +120,8 @@ async def stop_live_forward(client, message):
     for config in configs_to_stop:
         del Config.LIVE_FORWARD_CONFIG[config['from_chat_id']]
         await db.remove_live_forward(user_id, config['from_chat_id'])
-        # Stop the specific forwarder client if it's not used by other forwards
-        is_forwarder_in_use = any(c['bot_id'] == config['bot_id'] and c['user_id'] == user_id for c in Config.LIVE_FORWARD_CONFIG.values())
-        if not is_forwarder_in_use:
-            await client.stop_forwarder(user_id, config['bot_id'])
-    # Stop the listener client as there are no more forwards for this user
-    await client.stop_listener(user_id)
+    
+    # Stop the single persistent client for the user
+    await client.stop_user_client(user_id)
+    
     await message.reply_text("✅ All live forward sessions have been stopped.")

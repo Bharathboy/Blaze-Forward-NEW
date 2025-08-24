@@ -16,79 +16,85 @@ logging.basicConfig(
 pyro_log = logging.getLogger("pyrogram")
 pyro_log.setLevel(logging.WARNING)
 
-# Dictionaries to hold the running clients
-temp.LISTENER_CLIENTS = {}
-temp.FORWARDER_CLIENTS = {}
 
-async def start_listener_client(user_id):
-    """Starts and stores the userbot client responsible for listening to new messages."""
-    if user_id in temp.LISTENER_CLIENTS:
+temp.USER_CLIENTS = {}
+
+async def check_expired_premiums(client):
+    """Periodically checks for and removes expired premium plans, notifying users."""
+    while True:
+        try:
+            expired_user_ids = await db.get_and_remove_expired_users()
+            for user_id in expired_user_ids:
+                try:
+                    await asyncio.sleep(1)
+                    await client.send_message(
+                        user_id,
+                        "😢 **Your premium plan has expired.** 😢\n\n"
+                        "You have been reverted to the **Free** plan. To upgrade again, please contact the bot owner."
+                    )
+                    logging.info(f"Sent expiration notice to user {user_id}")
+                except Exception as e:
+                    logging.warning(f"Could not send expiration notice to user {user_id}: {e}")
+            
+            
+            await asyncio.sleep(3600)
+        except Exception as e:
+            logging.error(f"Error in background premium check: {e}", exc_info=True)
+            
+            await asyncio.sleep(300)
+
+async def start_user_client(user_id):
+    """
+    Starts a single, persistent userbot client for a user if not already running.
+    This client is used for both listening and forwarding.
+    """
+    if user_id in temp.USER_CLIENTS:
+        logging.info(f"User client for {user_id} is already running.")
         return
+    
     userbots = await db.get_userbots(user_id)
     if not userbots:
+        logging.error(f"Cannot start client for {user_id}: No userbot found in settings.")
         return
+        
     session_string = userbots[0]['session']
     try:
-        client = VJ(name=f"listener_{user_id}", api_id=Config.API_ID, api_hash=Config.API_HASH, session_string=session_string)
+        client = VJ(
+            name=f"user_session_{user_id}",
+            api_id=Config.API_ID,
+            api_hash=Config.API_HASH,
+            session_string=session_string
+        )
         await client.start()
-        client.add_handler(MessageHandler(live_forward_handler, (filters.channel | filters.group) & ~filters.me))
-        temp.LISTENER_CLIENTS[user_id] = client
-        logging.info(f"Started listener for user_id: {user_id}")
-    except Exception as e:
-        logging.error(f"Failed to start listener for {user_id}: {e}", exc_info=True)
-
-async def start_forwarder_client(user_id, bot_id, client_type):
-    """Starts and stores the bot/userbot client responsible for sending messages."""
-    client_key = f"{user_id}_{bot_id}"
-    if client_key in temp.FORWARDER_CLIENTS:
-        return
-    try:
-        if client_type == 'bot':
-            account = await db.get_bot(user_id, bot_id)
-            client = await get_client(account['token'], is_bot=True)
-        else:
-            account = await db.get_userbot(user_id, bot_id)
-            client = await get_client(account['session'], is_bot=False)
         
-        await client.start()
-        temp.FORWARDER_CLIENTS[client_key] = client
-        logging.info(f"Started forwarder client for user_id: {user_id}, bot_id: {bot_id}")
+        client.add_handler(MessageHandler(live_forward_handler, (filters.channel | filters.group) & ~filters.me))
+        temp.USER_CLIENTS[user_id] = client
+        logging.info(f"Successfully started and registered listener for user_id: {user_id}")
     except Exception as e:
-        logging.error(f"Failed to start forwarder for {client_key}: {e}", exc_info=True)
+        logging.error(f"Failed to start user client for {user_id}: {e}", exc_info=True)
 
-async def stop_listener_client(user_id):
-    """Stops the listening client for a user."""
-    if user_id in temp.LISTENER_CLIENTS:
+async def stop_user_client(user_id):
+    """Stops the persistent user client."""
+    if user_id in temp.USER_CLIENTS:
         try:
-            await temp.LISTENER_CLIENTS[user_id].stop()
+            await temp.USER_CLIENTS[user_id].stop()
+            logging.info(f"Stopped user client for user_id: {user_id}")
+        except Exception as e:
+            logging.error(f"Error stopping user client for {user_id}: {e}")
         finally:
-            del temp.LISTENER_CLIENTS[user_id]
-            logging.info(f"Stopped listener for user_id: {user_id}")
-
-async def stop_forwarder_client(user_id, bot_id):
-    """Stops the forwarding client for a user."""
-    client_key = f"{user_id}_{bot_id}"
-    if client_key in temp.FORWARDER_CLIENTS:
-        try:
-            await temp.FORWARDER_CLIENTS[client_key].stop()
-        finally:
-            del temp.FORWARDER_CLIENTS[client_key]
-            logging.info(f"Stopped forwarder client for key: {client_key}")
+            del temp.USER_CLIENTS[user_id]
 
 async def load_all_live_forwards_on_startup():
+    """Loads all saved forward configs and starts one client for each unique user."""
     all_forwards = await db.get_all_live_forwards()
-    unique_users = {}
+    unique_user_ids = set()
     async for forward in all_forwards:
         Config.LIVE_FORWARD_CONFIG[forward['from_chat_id']] = forward
-        user_id = forward['user_id']
-        if user_id not in unique_users:
-            unique_users[user_id] = []
-        unique_users[user_id].append((forward['bot_id'], forward['client_type']))
-
-    for user_id, clients in unique_users.items():
-        await start_listener_client(user_id)
-        for bot_id, client_type in clients:
-            await start_forwarder_client(user_id, bot_id, client_type)
+        unique_user_ids.add(forward['user_id'])
+    
+    logging.info(f"Found {len(unique_user_ids)} unique users with live forwards. Starting clients...")
+    for user_id in unique_user_ids:
+        await start_user_client(user_id)
 
 if __name__ == "__main__":
     VJBot = VJ(
@@ -100,24 +106,20 @@ if __name__ == "__main__":
         plugins=dict(root="plugins")
     )
 
-    # Attach client management functions to the bot instance
-    VJBot.start_listener = start_listener_client
-    VJBot.start_forwarder = start_forwarder_client
-    VJBot.stop_listener = stop_listener_client
-    VJBot.stop_forwarder = stop_forwarder_client
+    
+    VJBot.start_user_client = start_user_client
+    VJBot.stop_user_client = stop_user_client
       
     async def main():
         await VJBot.start()
         logging.info("Main bot started.")
+        asyncio.create_task(check_expired_premiums(VJBot))
         await load_all_live_forwards_on_startup()
         await restart_forwards(VJBot)
-        logging.info("Bot is now online.")
+        logging.info("Bot is now online and ready.")
         await idle()
-        logging.info("Shutting down... Stopping all clients.")
-        for user_id in list(temp.LISTENER_CLIENTS.keys()):
-            await stop_listener_client(user_id)
-        for client_key in list(temp.FORWARDER_CLIENTS.keys()):
-            user_id, bot_id = map(int, client_key.split('_'))
-            await stop_forwarder_client(user_id, bot_id)
+        logging.info("Shutting down... Stopping all user clients.")
+        for user_id in list(temp.USER_CLIENTS.keys()):
+            await stop_user_client(user_id)
 
     asyncio.get_event_loop().run_until_complete(main())
