@@ -18,7 +18,7 @@ COMPLETED_BTN = InlineKeyboardMarkup(
   [[
     InlineKeyboardButton('🔍 ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ 🔍', url='https://t.me/bharathboi_bot')
   ],[
-    InlineKeyboardButton('💠 ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ 💠', url='https://t.me/filmztube')
+    InlineKeyboardButton('💠 ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ 💠', url='https://t.me/Blaze_updateZ')
   ]]
 )
 CANCEL_BTN = InlineKeyboardMarkup([[InlineKeyboardButton('• ᴄᴀɴᴄᴇʟ', 'terminate_frwd')]])

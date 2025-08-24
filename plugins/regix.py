@@ -375,7 +375,7 @@ async def edit(user_id, bot_id, title, status, sts, bot_info, from_chat, to_chat
         text = TEXT.format(i.total, i.fetched, i.total_files, remaining, i.duplicate,
                             i.deleted, i.skip, i.filtered, status, time_to_comple, bot_info['id'], bot_info['name'], from_chat.title, to_chat.title, title)
         if status in ["ᴄᴀɴᴄᴇʟʟᴇᴅ", "ᴄᴏᴍᴘʟᴇᴛᴇᴅ"]:
-           button.append([InlineKeyboardButton('• ᴄᴏᴍᴘʟᴇᴛᴇᴅ ​•', url='https://t.me/filmztube')])
+           button.append([InlineKeyboardButton('• ᴄᴏᴍᴘʟᴇᴛᴇᴅ ​•', url='https://t.me/Blaze_updateZ')])
         else:
            button.append([InlineKeyboardButton('• ᴄᴀɴᴄᴇʟ', f'terminate_frwd_{i.bot_id}')])
         await msg_edit(msg, text, InlineKeyboardMarkup(button))

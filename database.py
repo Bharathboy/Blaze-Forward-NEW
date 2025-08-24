@@ -13,6 +13,7 @@ class Db:
         self.nfy = self.db.notify
         self.chl = self.db.channels
         self.premium = self.db.premium_users
+        self.live_forwards = self.db.live_forwards # New
 
     def new_user(self, id, name):
         return dict(
@@ -279,5 +280,23 @@ class Db:
             await self.premium.delete_many({"user_id": {"$in": expired_users}})
             
         return expired_users
+    
+    # New methods for live forwarding
+    async def add_live_forward(self, user_id, from_chat_id, to_chat_id, bot_id, client_type):
+        await self.live_forwards.update_one(
+            {"user_id": user_id, "from_chat_id": from_chat_id},
+            {"$set": {
+                "to_chat_id": to_chat_id,
+                "bot_id": bot_id,
+                "client_type": client_type
+            }},
+            upsert=True
+        )
+
+    async def remove_live_forward(self, user_id, from_chat_id):
+        await self.live_forwards.delete_one({"user_id": user_id, "from_chat_id": from_chat_id})
+
+    async def get_all_live_forwards(self):
+        return self.live_forwards.find({})
 
 db = Db(Config.DATABASE_URI, Config.DATABASE_NAME)

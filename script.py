@@ -80,7 +80,7 @@ Here are the available plans to enhance your experience. Contact the bot owner t
 
 📃ʙᴏᴛ : [ꜰᴏʀᴡᴀʀᴅ ʙᴏᴛ](https://t.me/Blaze_forward_bot)
 👦ᴄʀᴇᴀᴛᴏʀ : [ᴄʟɪᴄᴋ ʜᴇʀᴇ 👑](https://t.me/bharath_boy)
-🤖ᴜᴘᴅᴀᴛᴇ : [ᴄʟɪᴄᴋ ʜᴇʀᴇ](https://t.me/filmztube)
+🤖ᴜᴘᴅᴀᴛᴇ : [ᴄʟɪᴄᴋ ʜᴇʀᴇ](https://t.me/Blaze_updateZ)
 📡ʜᴏsᴛᴇᴅ ᴏɴ : sᴜᴘᴇʀ ꜰᴀsᴛ
 🗣️ʟᴀɴɢᴜᴀɢᴇ : ᴘʏᴛʜᴏɴ3
 📚ʟɪʙʀᴀʀʏ : ᴘʏʀᴏғᴏʀᴋ 2.3.68
