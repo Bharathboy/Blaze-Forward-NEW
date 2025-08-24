@@ -17,7 +17,8 @@ START_TIME = time.time()
 
 
 main_buttons = [[
-    InlineKeyboardButton('❣️ ᴅᴇᴠᴇʟᴏᴘᴇʀ ❣️', url='https://t.me/bharath_boy')
+    InlineKeyboardButton('❣️ ᴅᴇᴠᴇʟᴏᴘᴇʀ ❣️', url='https://t.me/bharath_boy'),
+    InlineKeyboardButton('📕 ɢᴜɪᴅᴇ/ᴍᴀɴᴜᴀʟ', url='https://t.me/Blaze_updateZ/4')
 ],[
     InlineKeyboardButton('🔍 ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ ', url='https://t.me/bharathboi_bot'),
     InlineKeyboardButton('🤖 ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url='https://t.me/Blaze_updateZ')
