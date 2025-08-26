@@ -40,6 +40,7 @@ async def forward_message_with_retry(message, to_chat_id, configs, new_caption, 
 
             await message.copy(
                 chat_id=to_chat_id,
+                video_cover = getattr(getattr(getattr(message, 'video', None), 'cover', None), 'file_id', None),
                 caption=new_caption if new_caption is not None else (message.caption or ""),
                 reply_markup=parse_buttons(configs.get('button') or ''),
                 protect_content=configs.get('protect', False)

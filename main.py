@@ -1,3 +1,4 @@
+import plugins.monkey_patch
 import asyncio
 import logging
 from pyrogram import Client as VJ, idle, filters

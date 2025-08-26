@@ -291,6 +291,7 @@ async def copy(user_id, bot, msg, bot_id, sts, bot_info, from_chat, to_chat):
         await bot.copy_message(
               chat_id=sts.get('TO'),
               from_chat_id=sts.get('FROM'),
+              video_cover = getattr(getattr(getattr(msg, 'video', None), 'cover', None), 'file_id', None),
               caption=msg.get('caption'),
               message_id=msg.get("msg_id"),
               reply_markup=msg.get('button'),
