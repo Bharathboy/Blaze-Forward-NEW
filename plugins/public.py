@@ -224,7 +224,7 @@ async def forward_callback_handler(bot: Client, query):
 
 
 
-@Client.on_message(filters.private & filters.text, group=-1)
+@Client.on_message(filters.private & (filters.text | filters.forwarded), group=-1)
 async def forward_message_handler(bot: Client, message):
     user_id = message.from_user.id
     conv = temp.FORWARD_CONV.get(user_id)
@@ -234,46 +234,52 @@ async def forward_message_handler(bot: Client, message):
     step = conv['step']
     try:
         # treat slash commands as cancellation
-        if message.text.startswith('/'):
+        if message.text and message.text.startswith('/'):
             temp.FORWARD_CONV.pop(user_id, None)
             return await message.reply_text(Script.CANCEL)
     except Exception as e:
         print(e)
         return
 
-    # waiting for the source message (link or forwarded message)
-    if step == 'waiting_from':
-        # link-based public message
-        if message.text and not getattr(message, 'forward_date', None):
-            regex = re.compile(
-                r"(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[A-Za-z_0-9]+)/(?P<msg>\d+)$")
-            txt = message.text.replace('?single', '')
-            m = regex.search(txt)
-            if not m:
-                x = await message.reply_text('ɪɴᴠᴀʟɪᴅ ʟɪɴᴋ. ᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ᴠᴀʟɪᴅ ᴘᴜʙʟɪᴄ ᴍᴇssᴀɢᴇ ʟɪɴᴋ.')
-                return
+    try:# waiting for the source message (link or forwarded message)
+        if step == 'waiting_from':
+            origin = getattr(message, 'forward_origin', None)
 
-            chat_id = m.group(4)
-            last_msg_id = int(m.group('msg'))
-            if chat_id.isnumeric():
-                chat_id = int(f"-100{chat_id}")
+            # link-based public message (not a forward)
+            if message.text and not origin:
+                regex = re.compile(
+                    r"(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[A-Za-z_0-9]+)/(?P<msg>\d+)$")
+                txt = message.text.replace('?single', '')
+                m = regex.search(txt)
+                if not m:
+                    x = await message.reply_text('ɪɴᴠᴀʟɪᴅ ʟɪɴᴋ. ᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ᴠᴀʟɪᴅ ᴘᴜʙʟɪᴄ ᴍᴇssᴀɢᴇ ʟɪɴᴋ.')
+                    return
 
-        # forwarded message from a channel/supergroup
-        elif getattr(message, 'forward_from_chat', None) and message.forward_from_chat.type in [enums.ChatType.CHANNEL, enums.ChatType.SUPERGROUP]:
-            last_msg_id = message.forward_from_message_id
-            chat_id = message.forward_from_chat.username or message.forward_from_chat.id
-            if last_msg_id is None:
-                return await message.reply_text("ᴛʜɪs ʟᴏᴏᴋs ʟɪᴋᴇ ᴀ ᴍᴇssᴀɢᴇ ғʀᴏᴍ ᴀɴ ᴀɴᴏɴʏᴍᴏᴜs ᴀᴅᴍɪɴ. ᴘʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴛʜᴇ ʟᴀsᴛ ᴍᴇssᴀɢᴇ ʟɪɴᴋ ғʀᴏᴍ ᴛʜᴇ ᴄʜᴀɴɴᴇʟ ɪɴsᴛᴇᴀᴅ.")
-        else:
-            return await message.reply_text("ɪɴᴠᴀʟɪᴅ ɪɴᴘᴜᴛ. ᴘʟᴇᴀsᴇ ғᴏʀᴡᴀʀᴅ ᴀ ᴍᴇssᴀɢᴇ ᴏʀ sᴇɴᴅ ᴀ ᴍᴇssᴀɢᴇ ʟɪɴᴋ.")
+                chat_id = m.group(4)
+                last_msg_id = int(m.group('msg'))
+                if chat_id.isnumeric():
+                    chat_id = int(f"-100{chat_id}")
 
-        conv.update(
-            {'from_id': chat_id, 'last_msg_id': last_msg_id, 'step': 'confirm_skip'})
-        buttons = [[
-            InlineKeyboardButton('ʏᴇs', callback_data='fwd:skip:yes'),
-            InlineKeyboardButton('ɴᴏ', callback_data='fwd:skip:no')
-        ]]
-        await message.reply_text('ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ sᴋɪᴘ ᴀɴʏ ᴍᴇssᴀɢᴇs?', reply_markup=InlineKeyboardMarkup(buttons))
+            # forwarded message from a channel/supergroup
+            elif origin and origin.type == enums.MessageOriginType.CHANNEL:
+                last_msg_id = origin.message_id
+                chat_id = origin.chat.username or origin.chat.id
+                # The check for anonymous admin forwards is implicitly handled, 
+                # as origin.message_id will exist for valid channel forwards.
+            else:
+                return await message.reply_text("ɪɴᴠᴀʟɪᴅ ɪɴᴘᴜᴛ. ᴘʟᴇᴀsᴇ ғᴏʀᴡᴀʀᴅ ᴀ ᴍᴇssᴀɢᴇ ᴏʀ sᴇɴᴅ ᴀ ᴍᴇssᴀɢᴇ ʟɪɴᴋ.")
+
+            conv.update(
+                {'from_id': chat_id, 'last_msg_id': last_msg_id, 'step': 'confirm_skip'})
+            buttons = [[
+                InlineKeyboardButton('ʏᴇs', callback_data='fwd:skip:yes'),
+                InlineKeyboardButton('ɴᴏ', callback_data='fwd:skip:no')
+            ]]
+            await message.reply_text('ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ sᴋɪᴘ ᴀɴʏ ᴍᴇssᴀɢᴇs?', reply_markup=InlineKeyboardMarkup(buttons))
+            return
+
+    except Exception as e:
+        print(e)
         return
 
     # waiting for skip number
