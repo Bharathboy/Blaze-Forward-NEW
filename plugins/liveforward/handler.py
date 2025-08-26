@@ -27,8 +27,8 @@ async def forward_message_with_retry(message, to_chat_id, configs, new_caption, 
     """
     Forwards or copies a message with a retry mechanism for FloodWait errors.
     """
-    # Add a random delay between 1 and 3 seconds
-    await asyncio.sleep(random.uniform(1, 3))
+    # Add a random delay between 4 and 7 seconds
+    await asyncio.sleep(random.uniform(4, 7))
     
     try:
         if configs.get('forward_tag'):
