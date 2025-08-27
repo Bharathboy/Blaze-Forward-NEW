@@ -13,6 +13,7 @@ class Config:
     BOT_SESSION = environ.get("BOT_SESSION", "Auto_Forward")
     DATABASE_URI = environ.get("DATABASE_URI", "")
     DATABASE_NAME = environ.get("DATABASE_NAME", "")
+    PUBLIC_MEDIA_CHANNEL = environ.get("PUBLIC_MEDIA_CHANNEL", "") 
     PREMIUM_USERS = {}
     TASK_LIMITS = {
         "gold": 4,

@@ -88,7 +88,8 @@ class STS:
             'persistent_deduplication': configs.get('persistent_deduplication', False),
             'regex_filter': configs.get('regex_filter'),
             'regex_filter_mode': configs.get('regex_filter_mode', 'exclude'),
-            'message_replacements': configs.get('message_replacements')
+            'message_replacements': configs.get('message_replacements'),
+            'custom_cover': configs.get('custom_cover', None)
         }
 
         return bot, configs.get('caption'), configs.get('forward_tag', False), forwarding_data, configs.get('protect'), button

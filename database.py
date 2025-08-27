@@ -106,7 +106,8 @@ class Db:
             'regex_filter': None,
             'regex_filter_mode': 'exclude',
             'persistent_deduplication': False,
-            'message_replacements': None
+            'message_replacements': None,
+            'custom_cover': None
         }
         user = await self.col.find_one({'id':int(id)})
         if user:

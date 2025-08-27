@@ -70,7 +70,7 @@ async def pub_(bot, message):
         m = await msg_edit(message.message, "<code>ᴠᴇʀɪꜰʏɪɴɢ ʏᴏᴜʀ ᴅᴀᴛᴀ, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ...</code>")
         temp.ACTIVE_STATUS_MSGS.setdefault(user, {})[i.bot_id] = m
         _bot, caption, forward_tag, datas, protect, button = await sts.get_data(user)
-        
+
         # Premium Features
         user_rank = await db.get_premium_user_rank(user)
         if user_rank == "default":
@@ -79,7 +79,9 @@ async def pub_(bot, message):
             message_replacements = None
             persistent_deduplication = False
             regex_filter_mode = 'exclude'
+            custom_cover_url = None
         else:
+            custom_cover_url = datas.get('custom_cover')
             regex_filter = datas.get('regex_filter')
             message_replacements = datas.get('message_replacements')
             persistent_deduplication = datas.get('persistent_deduplication', False)
@@ -234,15 +236,14 @@ async def pub_(bot, message):
                         MSG = []
                 else:
                     new_caption = custom_caption(message, caption)
-                    cover_id = getattr(getattr(getattr(message, 'video', None), 'cover', None), 'file_id', None)
+                    cover_to_use = custom_cover_url or getattr(getattr(getattr(message, 'video', None), 'cover', None), 'file_id', None)
 
-                    
                     # Message Replacements
                     if new_caption and message_replacements:
                         for find, replace in message_replacements.items():
                             new_caption = new_caption.replace(find, replace)
 
-                    details = {"msg_id": message.id, "media": media(message), "cover": cover_id, "caption": new_caption, 'button': button, "protect": protect}
+                    details = {"msg_id": message.id, "media": media(message), "cover": cover_to_use, "caption": new_caption, 'button': button, "protect": protect}
                     await copy(user, client, details, i.bot_id, sts, _bot, from_chat, to_chat)
                     sts.add('total_files')
                     await asyncio.sleep(sleep)

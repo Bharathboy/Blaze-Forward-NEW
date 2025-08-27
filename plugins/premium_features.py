@@ -3,6 +3,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from database import db
 from plugins.test import update_configs, get_configs
+from config import Config
 
 async def is_premium(query):
     user_id = query.from_user.id
@@ -22,6 +23,7 @@ async def premium_features_panel(client, query):
     buttons = [
         [InlineKeyboardButton('📜 Regex Filter', callback_data='regex_filter')],
         [InlineKeyboardButton('🔄 Message Replacements', callback_data='message_replacements')],
+        [InlineKeyboardButton('🖼️ custom cover/thumb', callback_data='custom_cover')],
         [InlineKeyboardButton('💾 Persistent Deduplication', callback_data='persistent_deduplication')],
         [InlineKeyboardButton('⬅️ Back', callback_data='settings#main')]
     ]
@@ -279,3 +281,74 @@ async def toggle_persistent_deduplication(client, query):
         f"**Status:** `{new_status}`",
         reply_markup=InlineKeyboardMarkup(new_buttons)
     )
+
+@Client.on_callback_query(filters.regex(r'^custom_cover'))
+async def custom_cover_settings(client, query):
+    if not await is_premium(query):
+        return
+
+    user_id = query.from_user.id
+    configs = await get_configs(user_id)
+    custom_cover = configs.get('custom_cover')
+
+    text = "**🖼️ custom cover/thumb**\n\n"
+    text += "Set a custom cover/thumb image that will be used as the thumbnail for forwarded videos."
+
+    buttons = [
+        [InlineKeyboardButton('🖼️ Set/Change Cover', callback_data='set_custom_cover')],
+    ]
+    if custom_cover:
+        buttons[0].append(InlineKeyboardButton('👀 Show Cover', callback_data='show_custom_cover'))
+        buttons.append([InlineKeyboardButton('🗑️ Remove Cover', callback_data='remove_custom_cover')])
+
+    buttons.append([InlineKeyboardButton('⬅️ Back', callback_data='premium_features')])
+    await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(buttons))
+
+@Client.on_callback_query(filters.regex(r'^set_custom_cover'))
+async def set_custom_cover(client, query):
+    if not await is_premium(query):
+        return
+
+    back_button = InlineKeyboardMarkup([[InlineKeyboardButton('⬅️ Back', callback_data='custom_cover')]])
+    user_id = query.from_user.id
+
+    await query.message.edit_text("Please send me the image you want to use as a custom cover/thumb.")
+
+    response = await client.listen(user_id)
+
+    if response.photo:
+        if not Config.PUBLIC_MEDIA_CHANNEL:
+            return await response.reply_text("Error: `PUBLIC_MEDIA_CHANNEL` is not set in config.", reply_markup=back_button)
+        try:
+            log_message = await response.copy(chat_id=Config.PUBLIC_MEDIA_CHANNEL)
+            await update_configs(user_id, 'custom_cover', log_message.link)
+            await response.reply_text("✅ custom cover/thumb has been set.", reply_markup=back_button)
+        except Exception as e:
+            await response.reply_text(f"Error: {e}\n\nMake sure the bot is an admin in the public channel.", reply_markup=back_button)
+    else:
+        await response.reply_text("Invalid input. Please send an image.", reply_markup=back_button)
+
+@Client.on_callback_query(filters.regex(r'^show_custom_cover'))
+async def show_custom_cover(client, query):
+    if not await is_premium(query):
+        return
+
+    user_id = query.from_user.id
+    configs = await get_configs(user_id)
+    cover_url = configs.get('custom_cover')
+
+    if cover_url:
+        # The URL itself is enough to send the photo
+        await client.send_photo(query.message.chat.id, cover_url, caption="This is your current custom cover/thumb.")
+    else:
+        await query.answer("No custom cover/thumb set.", show_alert=True)
+
+@Client.on_callback_query(filters.regex(r'^remove_custom_cover'))
+async def remove_custom_cover(client, query):
+    if not await is_premium(query):
+        return
+        
+    back_button = InlineKeyboardMarkup([[InlineKeyboardButton('⬅️ Back', callback_data='custom_cover')]])
+    user_id = query.from_user.id
+    await update_configs(user_id, 'custom_cover', None)
+    await query.message.edit_text("✅ custom cover/thumb has been removed.", reply_markup=back_button)
