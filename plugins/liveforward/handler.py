@@ -22,13 +22,13 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 PROCESSING = set()
+FORWARDING_LOCKS = {}
 
 async def forward_message_with_retry(message, to_chat_id, configs, new_caption, message_replacements):
     """
     Forwards or copies a message with a retry mechanism for FloodWait errors.
     """
-    # Add a random delay between 4 and 7 seconds
-    await asyncio.sleep(random.uniform(4, 7))
+    await asyncio.sleep(random.uniform(3,5))
     
     try:
         if configs.get('forward_tag'):
@@ -132,8 +132,13 @@ async def live_forward_handler(client, message):
                     await user_db.close()
         
         # --- Improved Forwarding Logic with Retry ---
-        new_caption = custom_caption(message, configs.get('caption'))
-        await forward_message_with_retry(message, to_chat_id, configs, new_caption, message_replacements)
+        if to_chat_id not in FORWARDING_LOCKS:
+            FORWARDING_LOCKS[to_chat_id] = asyncio.Lock()
+        lock = FORWARDING_LOCKS[to_chat_id]
+
+        async with lock:
+            new_caption = custom_caption(message, configs.get('caption'))
+            await forward_message_with_retry(message, to_chat_id, configs, new_caption, message_replacements)
 
     except Exception as e:
         logging.error(f"Error in live forward handler for message {message.id} in chat {message.chat.id}: {e}", exc_info=True)

@@ -1,19 +1,16 @@
+import os
+import re
 import io
 import logging
 from functools import partial
 from datetime import datetime
-from typing import Union, Optional, List
-import os
-import re
-from datetime import datetime
 from typing import Union, BinaryIO, List, Optional, Callable
 
-import pyrogram
 from pyrogram import StopTransmission, enums, raw, types, utils
 from pyrogram.errors import FilePartMissing
 from pyrogram.file_id import FileType
 
-from pyrogram import enums, types, Client, methods
+from pyrogram import enums, types, Client
 
 logging.basicConfig(
     level=logging.INFO,
